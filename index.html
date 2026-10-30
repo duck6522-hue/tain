@@ -7,7 +7,7 @@
 <style>
   :root {
     --bg: #f5f6fa; --card: #fff; --text: #222; --muted: #777; --line: #e3e5ec;
-    --accent: #4f6bed;
+    --accent: #5b3df5;
   }
   @media (prefers-color-scheme: dark) {
     :root { --bg: #15171c; --card: #1f222a; --text: #e8e9ee; --muted: #9a9eab; --line: #2f333d; }
@@ -16,33 +16,40 @@
   body { margin: 0; background: var(--bg); color: var(--text);
     font: 15px/1.5 -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif; }
   header { padding: 16px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
-  h1 { font-size: 20px; margin: 0; }
+  h1 { font-size: 22px; font-weight: 800; margin: 0; color: var(--accent); }
   main { padding: 0 16px 48px; max-width: 960px; margin: 0 auto; }
   button, input, select { font: inherit; color: inherit; }
   button { cursor: pointer; border: 1px solid var(--line); background: var(--card); border-radius: 8px; padding: 6px 12px; }
-  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
+  input[type=checkbox] { accent-color: var(--gc, var(--accent)); width: 18px; height: 18px; }
   button.ghost { border: none; background: none; color: var(--muted); padding: 2px 6px; }
   button.ghost:hover { color: #e5484d; }
   input[type=text], input[type=date], select { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; }
   .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
   .tab { border-radius: 999px; display: inline-flex; align-items: center; gap: 6px; }
   .tab .dot { width: 10px; height: 10px; border-radius: 50%; }
-  .tab.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+  .tab { font-weight: 600; border-color: var(--gc, var(--accent)); }
+  .tab.active { background: var(--gc, var(--accent)); color: #fff; }
+  .tab.active .dot { background: #fff !important; }
   .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
   .row input[type=text] { flex: 1; min-width: 140px; }
   .genre { margin-bottom: 28px; }
-  .genre-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-  .genre-head h2 { font-size: 17px; margin: 0; }
-  .goal { background: var(--card); border: 1px solid var(--line); border-left: 5px solid var(--gc); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; }
+  .genre-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; padding: 10px 14px; border-radius: 12px; background: var(--gc); color: #fff; }
+  .genre-head h2 { font-size: 18px; font-weight: 800; margin: 0; flex: 1; }
+  .genre-head .dot { display: none; }
+  .genre-head .meta { color: rgba(255,255,255,.92); font-weight: 600; }
+  .genre-head .ghost { color: #fff; }
+  .genre-head .ghost.armed { background: #fff; color: var(--danger); }
+  .goal { background: color-mix(in srgb, var(--gc) 11%, var(--card)); border: 2px solid var(--gc); border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; }
   .goal.done .title { text-decoration: line-through; color: var(--muted); }
   .goal-head { display: flex; align-items: center; gap: 8px; }
-  .title { font-weight: 600; flex: 1; }
+  .title { font-weight: 700; flex: 1; }
   .meta { color: var(--muted); font-size: 12px; }
   .meta.over { color: #e5484d; }
-  .bar { height: 6px; background: var(--line); border-radius: 3px; margin: 8px 0; overflow: hidden; }
-  .bar > i { display: block; height: 100%; background: var(--gc); }
+  .bar { height: 12px; background: color-mix(in srgb, var(--gc) 22%, var(--card)); border-radius: 6px; margin: 10px 0; overflow: hidden; }
+  .bar > i { display: block; height: 100%; background: var(--gc); border-radius: 6px; }
   .section { margin-top: 8px; }
-  .section h3 { font-size: 12px; color: var(--muted); margin: 0 0 4px; font-weight: 600; }
+  .section h3 { font-size: 12px; color: var(--gc); letter-spacing: .05em; margin: 0 0 4px; font-weight: 600; }
   .item { display: flex; align-items: center; gap: 8px; padding: 2px 0; }
   .item span { flex: 1; }
   .item.done span { text-decoration: line-through; color: var(--muted); }
@@ -70,7 +77,7 @@
     <summary>＋ ジャンルを追加</summary>
     <div class="row">
       <input type="text" id="gName" placeholder="ジャンル名（例: 仕事、健康、学習）">
-      <input type="color" id="gColor" value="#4f6bed">
+      <input type="color" id="gColor" value="#ff2d6f">
       <button class="primary" id="gAdd">追加</button>
     </div>
   </details>
@@ -93,9 +100,9 @@ const KEY = 'genre-goals-v1';
 const uid = () => Math.random().toString(36).slice(2, 10);
 const DEFAULT = {
   genres: [
-    { id: 'g1', name: '仕事', color: '#4f6bed' },
-    { id: 'g2', name: '健康', color: '#2da44e' },
-    { id: 'g3', name: '学習', color: '#e8890c' },
+    { id: 'g1', name: '仕事', color: '#5b3df5' },
+    { id: 'g2', name: '健康', color: '#00a870' },
+    { id: 'g3', name: '学習', color: '#f26a00' },
   ],
   goals: [],
 };
@@ -104,7 +111,7 @@ let state = load();
 let filter = 'all';
 
 function load() {
-  try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.genres && s.goals) return s; } catch (e) {}
+  try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.genres && s.goals) { const m = { '#4f6bed': '#5b3df5', '#2da44e': '#00a870', '#e8890c': '#f26a00' }; s.genres.forEach(g => g.color = m[g.color] || g.color); return s; } } catch (e) {}
   return structuredClone(DEFAULT);
 }
 function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
@@ -165,7 +172,7 @@ function render() {
   const tabs = document.getElementById('tabs');
   tabs.replaceChildren(
     el('button', { class: 'tab' + (filter === 'all' ? ' active' : ''), onclick: () => { filter = 'all'; render(); } }, 'すべて'),
-    ...state.genres.map(g => el('button', { class: 'tab' + (filter === g.id ? ' active' : ''), onclick: () => { filter = g.id; render(); } },
+    ...state.genres.map(g => el('button', { class: 'tab' + (filter === g.id ? ' active' : ''), style: `--gc:${g.color}`, onclick: () => { filter = g.id; render(); } },
       el('span', { class: 'dot', style: `background:${g.color}` }), g.name)));
 
   // genre select
@@ -182,7 +189,7 @@ function render() {
     const goals = state.goals.filter(x => x.genreId === g.id);
     const pcts = goals.map(progress);
     const avg = pcts.length ? Math.round(pcts.reduce((a, b) => a + b, 0) / pcts.length) : 0;
-    return el('section', { class: 'genre' },
+    return el('section', { class: 'genre', style: `--gc:${g.color}` },
       el('div', { class: 'genre-head' },
         el('span', { class: 'dot', style: `width:12px;height:12px;border-radius:50%;background:${g.color}` }),
         el('h2', {}, g.name),
