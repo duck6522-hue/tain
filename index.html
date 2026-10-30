@@ -115,15 +115,18 @@ const DEFAULT = {
     { id: 'g1', name: '仕事', color: '#2f6bff', color2: '#00c2ff' },
     { id: 'g2', name: '健康', color: '#00a870', color2: '#00c2a8' },
     { id: 'g3', name: '学習', color: '#ff2d8a', color2: '#ff7a45' },
+    { id: 'g4', name: '趣味', color: '#7a4dff', color2: '#ff3fd0' },
+    { id: 'g5', name: '家族', color: '#f26a00', color2: '#ff9a1f' },
   ],
   goals: [],
+  v: 2,
 };
 
 let state = load();
 let filter = 'all';
 
 function load() {
-  try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.genres && s.goals) { const m = { '#4f6bed': 0, '#5b3df5': 0, '#2da44e': 1, '#00a870': 1, '#e8890c': 2, '#f26a00': 2 }; s.genres.forEach(g => { if (g.color2) return; const d = DEFAULT.genres[m[g.color]]; if (d) { g.color = d.color; g.color2 = d.color2; } else g.color2 = g.color; }); return s; } } catch (e) {}
+  try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.genres && s.goals) { const m = { '#4f6bed': 0, '#5b3df5': 0, '#2da44e': 1, '#00a870': 1, '#e8890c': 2, '#f26a00': 2 }; s.genres.forEach(g => { if (g.color2) return; const d = DEFAULT.genres[m[g.color]]; if (d) { g.color = d.color; g.color2 = d.color2; } else g.color2 = g.color; }); if (!(s.v >= 2)) { DEFAULT.genres.slice(3).forEach(d => { if (!s.genres.some(g => g.name === d.name)) s.genres.push({ ...d }); }); s.v = 2; } return s; } } catch (e) {}
   return structuredClone(DEFAULT);
 }
 function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
