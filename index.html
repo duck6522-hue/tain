@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ジャンル別 目標管理</title>
+<style>
+  :root {
+    --bg: #f5f6fa; --card: #fff; --text: #222; --muted: #777; --line: #e3e5ec;
+    --accent: #4f6bed;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #15171c; --card: #1f222a; --text: #e8e9ee; --muted: #9a9eab; --line: #2f333d; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.5 -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif; }
+  header { padding: 16px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
+  h1 { font-size: 20px; margin: 0; }
+  main { padding: 0 16px 48px; max-width: 960px; margin: 0 auto; }
+  button, input, select { font: inherit; color: inherit; }
+  button { cursor: pointer; border: 1px solid var(--line); background: var(--card); border-radius: 8px; padding: 6px 12px; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button.ghost { border: none; background: none; color: var(--muted); padding: 2px 6px; }
+  button.ghost:hover { color: #e5484d; }
+  input[type=text], input[type=date], select { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; }
+  .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+  .tab { border-radius: 999px; display: inline-flex; align-items: center; gap: 6px; }
+  .tab .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .tab.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .row input[type=text] { flex: 1; min-width: 140px; }
+  .genre { margin-bottom: 28px; }
+  .genre-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .genre-head h2 { font-size: 17px; margin: 0; }
+  .goal { background: var(--card); border: 1px solid var(--line); border-left: 5px solid var(--gc); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; }
+  .goal.done .title { text-decoration: line-through; color: var(--muted); }
+  .goal-head { display: flex; align-items: center; gap: 8px; }
+  .title { font-weight: 600; flex: 1; }
+  .meta { color: var(--muted); font-size: 12px; }
+  .meta.over { color: #e5484d; }
+  .bar { height: 6px; background: var(--line); border-radius: 3px; margin: 8px 0; overflow: hidden; }
+  .bar > i { display: block; height: 100%; background: var(--gc); }
+  .section { margin-top: 8px; }
+  .section h3 { font-size: 12px; color: var(--muted); margin: 0 0 4px; font-weight: 600; }
+  .item { display: flex; align-items: center; gap: 8px; padding: 2px 0; }
+  .item span { flex: 1; }
+  .item.done span { text-decoration: line-through; color: var(--muted); }
+  .add { margin-top: 4px; }
+  .add input[type=text] { padding: 3px 8px; font-size: 13px; }
+  .empty { color: var(--muted); text-align: center; padding: 40px 0; }
+  details.new { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; margin-bottom: 16px; }
+  details.new summary { cursor: pointer; font-weight: 600; }
+  details.new .row { margin-top: 8px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🎯 ジャンル別 目標管理</h1>
+  <div class="row">
+    <button id="exportBtn">書き出し</button>
+    <button id="importBtn">読み込み</button>
+    <input id="importFile" type="file" accept="application/json" hidden>
+  </div>
+</header>
+<main>
+  <div class="tabs" id="tabs"></div>
+
+  <details class="new" id="genreForm">
+    <summary>＋ ジャンルを追加</summary>
+    <div class="row">
+      <input type="text" id="gName" placeholder="ジャンル名（例: 仕事、健康、学習）">
+      <input type="color" id="gColor" value="#4f6bed">
+      <button class="primary" id="gAdd">追加</button>
+    </div>
+  </details>
+
+  <details class="new" id="goalForm" open>
+    <summary>＋ 目標を追加</summary>
+    <div class="row">
+      <select id="nGenre"></select>
+      <input type="text" id="nTitle" placeholder="目標（例: TOEIC 800点）">
+      <input type="date" id="nDue" title="期限">
+      <button class="primary" id="nAdd">追加</button>
+    </div>
+  </details>
+
+  <div id="list"></div>
+</main>
+
+<script>
+const KEY = 'genre-goals-v1';
+const uid = () => Math.random().toString(36).slice(2, 10);
+const DEFAULT = {
+  genres: [
+    { id: 'g1', name: '仕事', color: '#4f6bed' },
+    { id: 'g2', name: '健康', color: '#2da44e' },
+    { id: 'g3', name: '学習', color: '#e8890c' },
+  ],
+  goals: [],
+};
+
+let state = load();
+let filter = 'all';
+
+function load() {
+  try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.genres && s.goals) return s; } catch (e) {}
+  return structuredClone(DEFAULT);
+}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+function update(fn) { fn(); save(); render(); }
+
+function el(tag, props = {}, ...kids) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(props)) {
+    if (k === 'class') n.className = v;
+    else if (k.startsWith('on')) n.addEventListener(k.slice(2), v);
+    else if (k === 'style') n.style.cssText = v;
+    else n[k] = v;
+  }
+  for (const c of kids.flat()) if (c != null) n.append(c);
+  return n;
+}
+
+function progress(goal) {
+  const all = [...goal.milestones, ...goal.todos];
+  if (!all.length) return goal.done ? 100 : 0;
+  return Math.round(all.filter(x => x.done).length / all.length * 100);
+}
+
+function itemList(goal, kind, label, placeholder) {
+  const list = goal[kind];
+  const input = el('input', { type: 'text', placeholder });
+  const add = () => {
+    const t = input.value.trim();
+    if (t) update(() => list.push({ id: uid(), title: t, done: false }));
+  };
+  input.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) add(); });
+  return el('div', { class: 'section' },
+    el('h3', {}, label),
+    list.map(it => el('div', { class: 'item' + (it.done ? ' done' : '') },
+      el('input', { type: 'checkbox', checked: it.done, onchange: () => update(() => it.done = !it.done) }),
+      el('span', {}, it.title),
+      el('button', { class: 'ghost', title: '削除', onclick: () => update(() => goal[kind] = list.filter(x => x !== it)) }, '✕'))),
+    el('div', { class: 'row add' }, input, el('button', { onclick: add }, '追加')));
+}
+
+function goalCard(goal, genre) {
+  const pct = progress(goal);
+  const overdue = goal.due && !goal.done && goal.due < new Date().toISOString().slice(0, 10);
+  return el('div', { class: 'goal' + (goal.done ? ' done' : ''), style: `--gc:${genre.color}` },
+    el('div', { class: 'goal-head' },
+      el('input', { type: 'checkbox', checked: goal.done, title: '目標を達成', onchange: () => update(() => goal.done = !goal.done) }),
+      el('div', { class: 'title' }, goal.title),
+      goal.due ? el('span', { class: 'meta' + (overdue ? ' over' : '') }, '期限 ' + goal.due) : null,
+      el('span', { class: 'meta' }, pct + '%'),
+      el('button', { class: 'ghost', title: '目標を削除', onclick: () => confirm('この目標を削除しますか？') && update(() => state.goals = state.goals.filter(g => g !== goal)) }, '🗑')),
+    el('div', { class: 'bar' }, el('i', { style: `width:${pct}%` })),
+    itemList(goal, 'milestones', '細かな目標', '細かな目標を追加（例: 単語帳1冊終える）'),
+    itemList(goal, 'todos', 'Todo', 'Todoを追加'));
+}
+
+function render() {
+  // tabs
+  const tabs = document.getElementById('tabs');
+  tabs.replaceChildren(
+    el('button', { class: 'tab' + (filter === 'all' ? ' active' : ''), onclick: () => { filter = 'all'; render(); } }, 'すべて'),
+    ...state.genres.map(g => el('button', { class: 'tab' + (filter === g.id ? ' active' : ''), onclick: () => { filter = g.id; render(); } },
+      el('span', { class: 'dot', style: `background:${g.color}` }), g.name)));
+
+  // genre select
+  const sel = document.getElementById('nGenre');
+  const prev = sel.value;
+  sel.replaceChildren(...state.genres.map(g => el('option', { value: g.id, textContent: g.name })));
+  sel.value = filter !== 'all' ? filter : (state.genres.some(g => g.id === prev) ? prev : (state.genres[0]?.id ?? ''));
+
+  // list
+  const list = document.getElementById('list');
+  const shown = state.genres.filter(g => filter === 'all' || g.id === filter);
+  if (!shown.length) { list.replaceChildren(el('div', { class: 'empty' }, 'ジャンルを追加してください')); return; }
+  list.replaceChildren(...shown.map(g => {
+    const goals = state.goals.filter(x => x.genreId === g.id);
+    const pcts = goals.map(progress);
+    const avg = pcts.length ? Math.round(pcts.reduce((a, b) => a + b, 0) / pcts.length) : 0;
+    return el('section', { class: 'genre' },
+      el('div', { class: 'genre-head' },
+        el('span', { class: 'dot', style: `width:12px;height:12px;border-radius:50%;background:${g.color}` }),
+        el('h2', {}, g.name),
+        el('span', { class: 'meta' }, `${goals.length}件 / 平均 ${avg}%`),
+        el('button', { class: 'ghost', title: 'ジャンルを削除', onclick: () => confirm(`「${g.name}」とその目標をすべて削除しますか？`) && update(() => {
+          state.genres = state.genres.filter(x => x !== g);
+          state.goals = state.goals.filter(x => x.genreId !== g.id);
+          if (filter === g.id) filter = 'all';
+        }) }, '🗑')),
+      goals.length ? goals.map(x => goalCard(x, g)) : el('div', { class: 'meta' }, 'まだ目標がありません'));
+  }));
+}
+
+// add genre
+document.getElementById('gAdd').onclick = () => {
+  const name = document.getElementById('gName').value.trim();
+  if (!name) return;
+  update(() => state.genres.push({ id: uid(), name, color: document.getElementById('gColor').value }));
+  document.getElementById('gName').value = '';
+};
+// add goal
+function addGoal() {
+  const title = document.getElementById('nTitle').value.trim();
+  const genreId = document.getElementById('nGenre').value;
+  if (!title || !genreId) return;
+  update(() => state.goals.push({ id: uid(), genreId, title, due: document.getElementById('nDue').value, done: false, milestones: [], todos: [] }));
+  document.getElementById('nTitle').value = '';
+  document.getElementById('nDue').value = '';
+}
+document.getElementById('nAdd').onclick = addGoal;
+document.getElementById('nTitle').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) addGoal(); });
+
+// export / import
+document.getElementById('exportBtn').onclick = () => {
+  const a = el('a', { href: URL.createObjectURL(new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' })), download: 'goals.json' });
+  a.click(); URL.revokeObjectURL(a.href);
+};
+document.getElementById('importBtn').onclick = () => document.getElementById('importFile').click();
+document.getElementById('importFile').onchange = async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try {
+    const s = JSON.parse(await f.text());
+    if (!Array.isArray(s.genres) || !Array.isArray(s.goals)) throw 0;
+    if (confirm('現在のデータを置き換えますか？')) update(() => { state = s; filter = 'all'; });
+  } catch { alert('読み込めないファイルです'); }
+  e.target.value = '';
+};
+
+render();
+</script>
+</body>
+</html>
