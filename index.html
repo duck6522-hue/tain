@@ -65,6 +65,20 @@
   details.new { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; margin-bottom: 16px; }
   details.new summary { cursor: pointer; font-weight: 600; }
   details.new .row { margin-top: 8px; }
+  .genre-head .open { color: #fff; text-decoration: none; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: rgba(255,255,255,.22); white-space: nowrap; }
+  .genre-head .open:hover { background: rgba(255,255,255,.36); }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 16px; }
+  .stat { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; }
+  .stat b { display: block; font-size: 26px; font-weight: 800; background: linear-gradient(120deg, var(--gc), var(--gc2)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .stat span { font-size: 12px; color: var(--muted); }
+  .focus main { max-width: 1200px; }
+  .focus #tabs, .focus #genreForm, .focus header .row { display: none; }
+  .focus .genre-head { padding: 22px 26px; border-radius: 16px; }
+  .focus .genre-head h2 { font-size: 30px; }
+  .focus .goals { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 0 16px; align-items: start; }
+  .focus .goal { padding: 18px 20px; }
+  .focus .title { font-size: 18px; }
+  .focus .item { font-size: 16px; padding: 4px 0; }
 </style>
 </head>
 <body>
@@ -185,7 +199,19 @@ function goalCard(goal, genre) {
     itemList(goal, 'todos', 'Todo', 'Todoを追加'));
 }
 
+function focusGenre() {
+  const m = /^#genre-([a-z0-9]+)$/.exec(location.hash);
+  return m ? state.genres.find(g => g.id === m[1]) : undefined;
+}
+window.addEventListener('hashchange', () => render());
+
+function stat(label, value) { return el('div', { class: 'stat' }, el('b', {}, value), el('span', {}, label)); }
+
 function render() {
+  const focus = focusGenre();
+  document.body.classList.toggle('focus', !!focus);
+  document.title = focus ? `${focus.name} | ジャンル別 目標管理` : 'ジャンル別 目標管理';
+  const cur = focus ? focus.id : filter;
   // tabs
   const tabs = document.getElementById('tabs');
   tabs.replaceChildren(
@@ -197,11 +223,11 @@ function render() {
   const sel = document.getElementById('nGenre');
   const prev = sel.value;
   sel.replaceChildren(...state.genres.map(g => el('option', { value: g.id, textContent: g.name })));
-  sel.value = filter !== 'all' ? filter : (state.genres.some(g => g.id === prev) ? prev : (state.genres[0]?.id ?? ''));
+  sel.value = cur !== 'all' ? cur : (state.genres.some(g => g.id === prev) ? prev : (state.genres[0]?.id ?? ''));
 
   // list
   const list = document.getElementById('list');
-  const shown = state.genres.filter(g => filter === 'all' || g.id === filter);
+  const shown = state.genres.filter(g => cur === 'all' || g.id === cur);
   if (!shown.length) { list.replaceChildren(el('div', { class: 'empty' }, 'ジャンルを追加してください')); return; }
   list.replaceChildren(...shown.map(g => {
     const goals = state.goals.filter(x => x.genreId === g.id);
@@ -212,12 +238,19 @@ function render() {
         el('span', { class: 'dot', style: `width:12px;height:12px;border-radius:50%;background:${g.color}` }),
         el('h2', {}, g.name),
         el('span', { class: 'meta' }, `${goals.length}件 / 平均 ${avg}%`),
+        focus ? el('a', { class: 'open', href: '#' }, '← 一覧へ')
+              : el('a', { class: 'open', href: location.href.split('#')[0] + '#genre-' + g.id, target: '_blank', rel: 'noopener', title: 'このジャンルを別タブで大きく開く' }, '拡大表示 ↗'),
         el('button', { class: 'ghost', title: 'ジャンルを削除', onclick: () => confirm(`「${g.name}」とその目標をすべて削除しますか？`) && update(() => {
           state.genres = state.genres.filter(x => x !== g);
           state.goals = state.goals.filter(x => x.genreId !== g.id);
           if (filter === g.id) filter = 'all';
         }) }, '🗑')),
-      goals.length ? goals.map(x => goalCard(x, g)) : el('div', { class: 'meta' }, 'まだ目標がありません'));
+      focus ? el('div', { class: 'stats' },
+        stat('目標 達成', `${goals.filter(x => x.done).length} / ${goals.length}`),
+        stat('細かな目標', `${goals.flatMap(x => x.milestones).filter(i => i.done).length} / ${goals.flatMap(x => x.milestones).length}`),
+        stat('Todo', `${goals.flatMap(x => x.todos).filter(i => i.done).length} / ${goals.flatMap(x => x.todos).length}`),
+        stat('平均進捗', avg + '%')) : null,
+      goals.length ? el('div', { class: 'goals' }, goals.map(x => goalCard(x, g))) : el('div', { class: 'meta' }, 'まだ目標がありません'));
   }));
 }
 
