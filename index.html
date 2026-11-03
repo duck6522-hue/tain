@@ -10,76 +10,116 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="目標管理">
 <title>ジャンル別 目標管理</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap">
 <style>
   :root {
-    --bg: #f5f6fa; --card: #fff; --text: #222; --muted: #777; --line: #e3e5ec;
-    --accent: #5b3df5;
+    --bg: #f4f5f9; --card: #fff; --field: #f4f5f9; --text: #1c1e26; --muted: #6b7080; --line: #e3e5ec;
+    --danger: #d92d3a; --warn: #d9620a; --ok: #0a8f5b;
+    --brand: linear-gradient(135deg, #2f6bff, #8a3dff 55%, #ff2d8a);
+    --sg1: #2f6bff; --sg2: #ff2d8a;
   }
   @media (prefers-color-scheme: dark) {
-    :root { --bg: #15171c; --card: #1f222a; --text: #e8e9ee; --muted: #9a9eab; --line: #2f333d; }
+    :root { --bg: #15171c; --card: #1f222a; --field: #2a2e38; --text: #e8e9ee; --muted: #9a9eab; --line: #2f333d; --danger: #ff6b76; --warn: #ffa24d; --ok: #3ddc97; color-scheme: dark; }
   }
   * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
   body { margin: 0; background: var(--bg); color: var(--text);
-    font: 15px/1.5 -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif; }
-  header { padding: 16px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
-  h1 { font-size: 22px; font-weight: 800; margin: 0; color: #2f6bff; background: linear-gradient(120deg, #2f6bff, #ff2d8a); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-  main { padding: 0 16px 48px; max-width: 960px; margin: 0 auto; }
+    font: 15px/1.5 "Noto Sans JP", -apple-system, "Hiragino Sans", sans-serif; }
+  header { padding: 16px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; max-width: 960px; margin: 0 auto; }
+  h1 { font-size: 22px; font-weight: 900; letter-spacing: -1px; margin: 0; background: var(--brand); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  main { padding: 0 16px 112px; max-width: 960px; margin: 0 auto; }
   button, input, select { font: inherit; color: inherit; }
-  button { cursor: pointer; border: 1px solid var(--line); background: var(--card); border-radius: 8px; padding: 6px 12px; }
-  button.primary { background: linear-gradient(120deg, #2f6bff, #ff2d8a); border-color: transparent; color: #fff; font-weight: 700; }
-  input[type=checkbox] { accent-color: var(--gc, var(--accent)); width: 18px; height: 18px; }
-  button.ghost { border: none; background: none; color: var(--muted); padding: 2px 6px; }
-  button.ghost:hover { color: #e5484d; }
-  input[type=text], input[type=date], select { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; }
-  .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
-  .tab { border-radius: 999px; display: inline-flex; align-items: center; gap: 6px; }
-  .tab .dot { width: 10px; height: 10px; border-radius: 50%; }
-  .tab { font-weight: 600; border-color: var(--gc, var(--accent)); }
-  .tab.active { background: linear-gradient(120deg, var(--gc, var(--accent)), var(--gc2, var(--gc, var(--accent)))); color: #fff; }
-  .tab.active .dot { background: #fff !important; }
+  button { cursor: pointer; border: none; background: var(--field); border-radius: 12px; padding: 8px 14px; font-weight: 700; }
+  button.primary { background: var(--brand); color: #fff; font-weight: 900; }
+  button.wide { width: 100%; min-height: 52px; border-radius: 16px; font-size: 16px; }
+  header .row button { font-size: 12px; background: var(--card); color: var(--muted); border-radius: 999px; padding: 6px 12px; }
+  input[type=checkbox] { accent-color: var(--gc, #2f6bff); width: 20px; height: 20px; flex: none; }
+  button.ghost { background: none; color: var(--muted); padding: 2px 6px; font-weight: 400; }
+  button.ghost:hover, button.ghost.armed { color: var(--danger); }
+  input[type=text], input[type=date], select { background: var(--field); border: 1px solid transparent; border-radius: 14px; padding: 10px 14px; min-width: 0; }
+  input:focus, select:focus { outline: 2px solid var(--gc, #2f6bff); outline-offset: 0; }
   .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
   .row input[type=text] { flex: 1; min-width: 140px; }
-  .genre { margin-bottom: 28px; }
-  .genre-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; padding: 10px 14px; border-radius: 12px; background: linear-gradient(120deg, var(--gc), var(--gc2)); color: #fff; }
-  .genre-head h2 { font-size: 18px; font-weight: 800; margin: 0; flex: 1; }
-  .genre-head .dot { display: none; }
-  .genre-head .meta { color: rgba(255,255,255,.92); font-weight: 600; }
-  .genre-head .ghost { color: #fff; }
-  .genre-head .ghost.armed { background: #fff; color: var(--danger); }
-  .goal { --tint: color-mix(in srgb, var(--gc) 10%, var(--card)); border: 2px solid transparent; background: linear-gradient(var(--tint), var(--tint)) padding-box, linear-gradient(120deg, var(--gc), var(--gc2)) border-box; border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; }
-  .goal.done .title { text-decoration: line-through; color: var(--muted); }
-  .goal-head { display: flex; align-items: center; gap: 8px; }
-  .title { font-weight: 700; flex: 1; }
+
+  /* 集計カード */
+  .summary { padding: 22px; border-radius: 24px; color: #fff; margin-bottom: 16px;
+    background: linear-gradient(135deg, var(--sg1), var(--sg2)); box-shadow: 0 6px 16px color-mix(in srgb, var(--sg1) 25%, transparent); }
+  .summary .lab { opacity: .8; font-weight: 700; }
+  .summary .big { font-size: 38px; font-weight: 900; letter-spacing: -1px; line-height: 1.2; }
+  .summary .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
+  .tile { background: rgba(255,255,255,.16); border-radius: 14px; padding: 10px 12px; min-width: 0; }
+  .tile span { display: block; font-size: 12px; opacity: .85; }
+  .tile b { font-size: 20px; font-weight: 900; }
+
+  /* ジャンルのピル */
+  .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+  .tab { border-radius: 999px; display: inline-flex; align-items: center; gap: 7px; background: var(--card); border: 1px solid var(--line); font-size: 13px; padding: 9px 14px; }
+  .tab .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .tab.active { background: linear-gradient(120deg, var(--gc, #2f6bff), var(--gc2, var(--gc, #5b3df5))); color: #fff; border-color: transparent; }
+  .tab.active .dot { background: #fff !important; }
+
+  /* ジャンル見出し */
+  .genre { margin-bottom: 26px; }
+  .genre-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .gicon { width: 28px; height: 28px; border-radius: 10px; background: linear-gradient(135deg, var(--gc), var(--gc2)); flex: none; }
+  .genre-head h2 { font-size: 15px; font-weight: 900; margin: 0; flex: 1; min-width: 0; overflow-wrap: anywhere; }
   .meta { color: var(--muted); font-size: 12px; }
-  .meta.over { color: #e5484d; }
-  .bar { height: 12px; background: color-mix(in srgb, var(--gc) 22%, var(--card)); border-radius: 6px; margin: 10px 0; overflow: hidden; }
-  .bar > i { display: block; height: 100%; background: linear-gradient(90deg, var(--gc), var(--gc2)); border-radius: 6px; }
-  .section { margin-top: 8px; }
-  .section h3 { font-size: 12px; color: var(--gc); letter-spacing: .05em; margin: 0 0 4px; font-weight: 600; }
-  .item { display: flex; align-items: center; gap: 8px; padding: 2px 0; }
-  .item span { flex: 1; }
+  .genre-head .open { color: var(--gc); text-decoration: none; font-size: 12px; font-weight: 900; padding: 4px 12px; border-radius: 999px; background: color-mix(in srgb, var(--gc) 12%, transparent); white-space: nowrap; }
+
+  /* 目標カード */
+  .goals { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr)); gap: 10px 14px; align-items: start; }
+  .goal { position: relative; overflow: hidden; background: var(--card); border-radius: 16px; padding: 14px 16px 14px 22px; }
+  .goal::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: linear-gradient(180deg, var(--gc), var(--gc2)); }
+  .goal.done { opacity: .72; }
+  .goal.done .title { text-decoration: line-through; color: var(--muted); }
+  .goal-head { display: flex; align-items: flex-start; gap: 10px; }
+  .goal-main { flex: 1; min-width: 0; }
+  .title { font-weight: 900; font-size: 16px; overflow-wrap: anywhere; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+  .tag { font-size: 12px; font-weight: 900; padding: 1px 9px; border-radius: 10px; color: var(--tc); background: color-mix(in srgb, var(--tc) 14%, transparent); }
+  .pct { font-size: 18px; font-weight: 900; letter-spacing: -.5px; }
+  .bar { height: 8px; background: color-mix(in srgb, var(--gc) 15%, transparent); border-radius: 8px; margin: 12px 0 6px; overflow: hidden; }
+  .bar > i { display: block; height: 100%; background: linear-gradient(90deg, var(--gc), var(--gc2)); border-radius: 8px; }
+  .section { margin-top: 10px; }
+  .section h3 { font-size: 12px; font-weight: 900; color: var(--gc); letter-spacing: .05em; margin: 0 0 4px; }
+  .item { display: flex; align-items: center; gap: 10px; padding: 3px 0; }
+  .item span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
   .item.done span { text-decoration: line-through; color: var(--muted); }
-  .add { margin-top: 4px; }
-  .add input[type=text] { padding: 3px 8px; font-size: 13px; }
+  .add { margin-top: 6px; flex-wrap: nowrap; }
+  .add input[type=text] { padding: 6px 12px; font-size: 13px; min-width: 0; }
+  .add button { padding: 6px 12px; font-size: 13px; }
   .empty { color: var(--muted); text-align: center; padding: 40px 0; }
-  .sw { width: 32px; height: 32px; padding: 0; border-radius: 50%; border: 2px solid var(--card); }
+
+  /* 追加ボタンとシート */
+  .fab { position: fixed; right: max(16px, env(safe-area-inset-right, 0px)); bottom: max(16px, env(safe-area-inset-bottom, 0px)); z-index: 10;
+    background: var(--brand); color: #fff; font-weight: 900; font-size: 15px; padding: 14px 20px; border-radius: 999px; box-shadow: 0 6px 16px rgba(47,107,255,.35); }
+  .sheet-back { position: fixed; inset: 0; background: rgba(0,0,0,.4); display: flex; align-items: flex-end; justify-content: center; z-index: 20; }
+  .sheet { width: 100%; max-width: 560px; background: var(--card); border-radius: 28px 28px 0 0; padding: 12px 20px calc(24px + env(safe-area-inset-bottom, 0px)); max-height: 92vh; overflow: auto; }
+  .grab { width: 40px; height: 4px; background: var(--line); border-radius: 2px; margin: 0 auto 14px; }
+  .sheet h3 { font-size: 20px; font-weight: 900; margin: 0 0 12px; }
+  .sheet .stack { display: flex; flex-direction: column; gap: 10px; }
+  .sheet hr { border: none; border-top: 1px solid var(--line); margin: 22px 0 18px; }
+  .sw { width: 34px; height: 34px; padding: 0; border-radius: 50%; border: 2px solid var(--card); }
   .sw.sel { outline: 3px solid var(--text); outline-offset: 1px; }
-  .swatches { display: flex; gap: 8px; flex-wrap: wrap; }
-  details.new { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; margin-bottom: 16px; }
-  details.new summary { cursor: pointer; font-weight: 600; }
-  details.new .row { margin-top: 8px; }
-  .genre-head .open { color: #fff; text-decoration: none; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: rgba(255,255,255,.22); white-space: nowrap; }
-  .genre-head .open:hover { background: rgba(255,255,255,.36); }
+  .swatches { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  /* 拡大ページ */
   .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 16px; }
-  .stat { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; }
-  .stat b { display: block; font-size: 26px; font-weight: 800; background: linear-gradient(120deg, var(--gc), var(--gc2)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .stat { background: var(--card); border-radius: 16px; padding: 12px 16px; }
+  .stat b { display: block; font-size: 28px; font-weight: 900; letter-spacing: -1px; background: linear-gradient(120deg, var(--gc), var(--gc2)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
   .stat span { font-size: 12px; color: var(--muted); }
-  .focus main { max-width: 1200px; }
-  .focus #tabs, .focus #genreForm, .focus header .row { display: none; }
-  .focus .genre-head { padding: 22px 26px; border-radius: 16px; }
-  .focus .genre-head h2 { font-size: 30px; }
-  .focus .goals { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 0 16px; align-items: start; }
-  .focus .goal { padding: 18px 20px; }
+  .focus main, .focus header { max-width: 1200px; }
+  .focus #tabs, .focus #summary, .focus header .row { display: none; }
+  .focus .genre-head { padding: 22px 26px; border-radius: 24px; background: linear-gradient(120deg, var(--gc), var(--gc2)); color: #fff; box-shadow: 0 6px 16px color-mix(in srgb, var(--gc) 25%, transparent); margin-bottom: 14px; }
+  .focus .gicon { display: none; }
+  .focus .genre-head h2 { font-size: 30px; letter-spacing: -1px; }
+  .focus .genre-head .meta { color: rgba(255,255,255,.92); font-weight: 700; }
+  .focus .genre-head .open { color: #fff; background: rgba(255,255,255,.22); }
+  .focus .genre-head .ghost { color: #fff; }
+  .focus .goals { grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); }
+  .focus .goal { padding: 18px 20px 18px 26px; }
   .focus .title { font-size: 18px; }
   .focus .item { font-size: 16px; padding: 4px 0; }
 </style>
@@ -94,29 +134,32 @@
   </div>
 </header>
 <main>
+  <div id="summary"></div>
   <div class="tabs" id="tabs"></div>
+  <div id="list"></div>
+</main>
 
-  <details class="new" id="genreForm">
-    <summary>＋ ジャンルを追加</summary>
-    <div class="row">
-      <input type="text" id="gName" placeholder="ジャンル名（例: 仕事、健康、学習）">
-      <div class="swatches" id="swatches"></div>
-      <button class="primary" id="gAdd">追加</button>
-    </div>
-  </details>
+<button class="fab" id="fab">＋ 目標を追加</button>
 
-  <details class="new" id="goalForm" open>
-    <summary>＋ 目標を追加</summary>
-    <div class="row">
+<div class="sheet-back" id="sheetBack" hidden>
+  <div class="sheet" role="dialog" aria-label="追加">
+    <div class="grab"></div>
+    <h3>目標を追加</h3>
+    <div class="stack">
       <select id="nGenre"></select>
       <input type="text" id="nTitle" placeholder="目標（例: TOEIC 800点）">
       <input type="date" id="nDue" title="期限">
-      <button class="primary" id="nAdd">追加</button>
+      <button class="primary wide" id="nAdd">追加</button>
     </div>
-  </details>
-
-  <div id="list"></div>
-</main>
+    <hr>
+    <h3>ジャンルを追加</h3>
+    <div class="stack">
+      <input type="text" id="gName" placeholder="ジャンル名（例: 仕事、健康、学習）">
+      <div class="swatches" id="swatches"></div>
+      <button class="wide" id="gAdd">ジャンルを追加</button>
+    </div>
+  </div>
+</div>
 
 <script>
 const KEY = 'genre-goals-v1';
@@ -187,15 +230,29 @@ function itemList(goal, kind, label, placeholder) {
     el('div', { class: 'row add' }, input, el('button', { onclick: add }, '追加')));
 }
 
+function daysLeft(due) {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  return Math.round((new Date(due + 'T00:00:00') - today) / 864e5);
+}
+
+function tag(text, color) { return el('span', { class: 'tag', style: `--tc:${color}` }, text); }
+
 function goalCard(goal, genre) {
   const pct = progress(goal);
-  const overdue = goal.due && !goal.done && goal.due < new Date().toISOString().slice(0, 10);
-  return el('div', { class: 'goal' + (goal.done ? ' done' : ''), style: `--gc:${genre.color}` },
+  const tags = [];
+  if (goal.done) tags.push(tag('達成', 'var(--ok)'));
+  else if (goal.due) {
+    const d = daysLeft(goal.due);
+    if (d < 0) tags.push(tag(`期限切れ ${goal.due}`, 'var(--danger)'));
+    else if (d === 0) tags.push(tag('今日まで', 'var(--warn)'));
+    else tags.push(tag(`あと${d}日`, d <= 7 ? 'var(--warn)' : 'var(--muted)'));
+  }
+  tags.push(tag(genre.name, genre.color));
+  return el('div', { class: 'goal' + (goal.done ? ' done' : ''), style: `--gc:${genre.color};--gc2:${genre.color2}` },
     el('div', { class: 'goal-head' },
       el('input', { type: 'checkbox', checked: goal.done, title: '目標を達成', onchange: () => update(() => goal.done = !goal.done) }),
-      el('div', { class: 'title' }, goal.title),
-      goal.due ? el('span', { class: 'meta' + (overdue ? ' over' : '') }, '期限 ' + goal.due) : null,
-      el('span', { class: 'meta' }, pct + '%'),
+      el('div', { class: 'goal-main' }, el('div', { class: 'title' }, goal.title), el('div', { class: 'tags' }, tags)),
+      el('span', { class: 'pct' }, pct + '%'),
       el('button', { class: 'ghost', title: '目標を削除', onclick: () => confirm('この目標を削除しますか？') && update(() => state.goals = state.goals.filter(g => g !== goal)) }, '🗑')),
     el('div', { class: 'bar' }, el('i', { style: `width:${pct}%` })),
     itemList(goal, 'milestones', '細かな目標', '細かな目標を追加（例: 単語帳1冊終える）'),
@@ -222,6 +279,20 @@ function render() {
     ...state.genres.map(g => el('button', { class: 'tab' + (filter === g.id ? ' active' : ''), style: `--gc:${g.color};--gc2:${g.color2}`, onclick: () => { filter = g.id; render(); } },
       el('span', { class: 'dot', style: `background:linear-gradient(120deg,${g.color},${g.color2})` }), g.name)));
 
+  // summary
+  const sg = cur === 'all' ? null : state.genres.find(g => g.id === cur);
+  const sGoals = state.goals.filter(x => cur === 'all' || x.genreId === cur);
+  const sAvg = sGoals.length ? Math.round(sGoals.map(progress).reduce((a, b) => a + b, 0) / sGoals.length) : 0;
+  const sMs = sGoals.flatMap(x => x.milestones), sTd = sGoals.flatMap(x => x.todos);
+  const summary = document.getElementById('summary');
+  summary.replaceChildren(el('div', { class: 'summary', style: sg ? `--sg1:${sg.color};--sg2:${sg.color2}` : '' },
+    el('div', { class: 'lab' }, sg ? `${sg.name}の進捗` : '全体の進捗'),
+    el('div', { class: 'big' }, sAvg + '%'),
+    el('div', { class: 'tiles' },
+      el('div', { class: 'tile' }, el('span', {}, '目標'), el('b', {}, `${sGoals.filter(x => x.done).length}/${sGoals.length}`)),
+      el('div', { class: 'tile' }, el('span', {}, '細かな目標'), el('b', {}, `${sMs.filter(i => i.done).length}/${sMs.length}`)),
+      el('div', { class: 'tile' }, el('span', {}, 'Todo'), el('b', {}, `${sTd.filter(i => i.done).length}/${sTd.length}`)))));
+
   // genre select
   const sel = document.getElementById('nGenre');
   const prev = sel.value;
@@ -238,7 +309,7 @@ function render() {
     const avg = pcts.length ? Math.round(pcts.reduce((a, b) => a + b, 0) / pcts.length) : 0;
     return el('section', { class: 'genre', style: `--gc:${g.color};--gc2:${g.color2}` },
       el('div', { class: 'genre-head' },
-        el('span', { class: 'dot', style: `width:12px;height:12px;border-radius:50%;background:${g.color}` }),
+        el('span', { class: 'gicon' }),
         el('h2', {}, g.name),
         el('span', { class: 'meta' }, `${goals.length}件 / 平均 ${avg}%`),
         focus ? el('a', { class: 'open', href: '#' }, '← 一覧へ')
@@ -257,12 +328,21 @@ function render() {
   }));
 }
 
+// bottom sheet
+const sheetBack = document.getElementById('sheetBack');
+function openSheet() { sheetBack.hidden = false; document.getElementById('nTitle').focus(); }
+function closeSheet() { sheetBack.hidden = true; }
+document.getElementById('fab').onclick = openSheet;
+sheetBack.addEventListener('click', e => { if (e.target === sheetBack) closeSheet(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
+
 // add genre
 document.getElementById('gAdd').onclick = () => {
   const name = document.getElementById('gName').value.trim();
   if (!name) return;
   update(() => state.genres.push({ id: uid(), name, color: PALETTE[pick].c1, color2: PALETTE[pick].c2 }));
   document.getElementById('gName').value = '';
+  closeSheet();
 };
 // add goal
 function addGoal() {
@@ -272,6 +352,7 @@ function addGoal() {
   update(() => state.goals.push({ id: uid(), genreId, title, due: document.getElementById('nDue').value, done: false, milestones: [], todos: [] }));
   document.getElementById('nTitle').value = '';
   document.getElementById('nDue').value = '';
+  closeSheet();
 }
 document.getElementById('nAdd').onclick = addGoal;
 document.getElementById('nTitle').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) addGoal(); });
