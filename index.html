@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="theme-color" content="#2f6bff">
@@ -15,164 +15,209 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap">
 <style>
   :root {
-    --bg: #f4f5f9; --card: #fff; --field: #f4f5f9; --text: #1c1e26; --muted: #6b7080; --line: #e3e5ec;
+    --bg: #f4f5f9; --card: #fff; --field: #f1f2f7; --text: #1c1e26; --muted: #6b7080; --line: #e3e5ec;
     --danger: #d92d3a; --warn: #d9620a; --ok: #0a8f5b;
-    --brand: linear-gradient(135deg, #2f6bff, #8a3dff 55%, #ff2d8a);
     --sg1: #2f6bff; --sg2: #ff2d8a;
   }
   @media (prefers-color-scheme: dark) {
-    :root { --bg: #15171c; --card: #1f222a; --field: #2a2e38; --text: #e8e9ee; --muted: #9a9eab; --line: #2f333d; --danger: #ff6b76; --warn: #ffa24d; --ok: #3ddc97; color-scheme: dark; }
+    :root:not([data-theme="light"]) { --bg: #14161b; --card: #1f222a; --field: #2a2e38; --text: #e8e9ee; --muted: #9a9eab; --line: #2f333d; --danger: #ff6b76; --warn: #ffa24d; --ok: #3ddc97; color-scheme: dark; }
   }
+  :root[data-theme="dark"] { --bg: #14161b; --card: #1f222a; --field: #2a2e38; --text: #e8e9ee; --muted: #9a9eab; --line: #2f333d; --danger: #ff6b76; --warn: #ffa24d; --ok: #3ddc97; color-scheme: dark; }
   * { box-sizing: border-box; }
   [hidden] { display: none !important; }
-  body { margin: 0; background: var(--bg); color: var(--text);
-    font: 15px/1.5 "Noto Sans JP", -apple-system, "Hiragino Sans", sans-serif; }
-  header { padding: 16px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; max-width: 960px; margin: 0 auto; }
-  h1 { font-size: 22px; font-weight: 900; letter-spacing: -1px; margin: 0; background: var(--brand); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-  main { padding: 0 16px 112px; max-width: 960px; margin: 0 auto; }
+  body { margin: 0; background: var(--bg); color: var(--text); --gc: var(--sg1); --gc2: var(--sg2);
+    font: 15px/1.5 "Noto Sans JP", -apple-system, "Hiragino Sans", sans-serif; -webkit-tap-highlight-color: transparent; }
+  header, main { max-width: 760px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  header { padding-top: calc(14px + env(safe-area-inset-top, 0px)); padding-bottom: 10px; display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+  h1 { font-size: 22px; font-weight: 900; letter-spacing: -1px; margin: 0; color: var(--sg1); background: linear-gradient(135deg, var(--sg1), var(--sg2)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  #dateLabel { font-size: 12px; color: var(--muted); font-weight: 700; }
+  main { padding-bottom: calc(150px + env(safe-area-inset-bottom, 0px)); }
   button, input, select { font: inherit; color: inherit; }
   button { cursor: pointer; border: none; background: var(--field); border-radius: 12px; padding: 8px 14px; font-weight: 700; }
-  button.primary { background: var(--brand); color: #fff; font-weight: 900; }
-  button.wide { width: 100%; min-height: 52px; border-radius: 16px; font-size: 16px; }
-  header .row button { font-size: 12px; background: var(--card); color: var(--muted); border-radius: 999px; padding: 6px 12px; }
-  input[type=checkbox] { accent-color: var(--gc, #2f6bff); width: 20px; height: 20px; flex: none; }
-  button.ghost { background: none; color: var(--muted); padding: 2px 6px; font-weight: 400; }
-  button.ghost:hover, button.ghost.armed { color: var(--danger); }
-  input[type=text], input[type=date], select { background: var(--field); border: 1px solid transparent; border-radius: 14px; padding: 10px 14px; min-width: 0; }
-  input:focus, select:focus { outline: 2px solid var(--gc, #2f6bff); outline-offset: 0; }
-  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-  .row input[type=text] { flex: 1; min-width: 140px; }
+  button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--gc); outline-offset: 2px; }
+  button.primary { background: linear-gradient(135deg, var(--sg1), var(--sg2)); color: #fff; font-weight: 900; }
+  button.wide { width: 100%; min-height: 50px; border-radius: 16px; font-size: 16px; }
+  button.text { background: none; color: var(--muted); padding: 6px 8px; }
+  button.text.danger { color: var(--danger); }
+  input[type=text], input[type=date], select { background: var(--field); border: 1px solid transparent; border-radius: 14px; padding: 10px 14px; min-width: 0; width: 100%; }
+  input[type=checkbox] { appearance: none; -webkit-appearance: none; flex: none; width: 24px; height: 24px; margin: 0; border-radius: 50%; cursor: pointer;
+    border: 2px solid color-mix(in srgb, var(--gc) 55%, var(--line)); background: var(--card); }
+  input[type=checkbox]:checked { border-color: transparent;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6.5 12.5l3.8 3.8 7.2-8' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/100% no-repeat, linear-gradient(135deg, var(--gc), var(--gc2)); }
+  .row { display: flex; gap: 8px; align-items: center; }
+  .meta { color: var(--muted); font-size: 12px; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+  .tag { font-size: 12px; font-weight: 900; padding: 1px 9px; border-radius: 10px; color: color-mix(in srgb, var(--tc) 72%, var(--text)); background: color-mix(in srgb, var(--tc) 15%, transparent); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
   /* 集計カード */
-  .summary { padding: 22px; border-radius: 24px; color: #fff; margin-bottom: 16px;
-    background: linear-gradient(135deg, var(--sg1), var(--sg2)); box-shadow: 0 6px 16px color-mix(in srgb, var(--sg1) 25%, transparent); }
-  .summary .lab { opacity: .8; font-weight: 700; }
-  .summary .big { font-size: 38px; font-weight: 900; letter-spacing: -1px; line-height: 1.2; }
-  .summary .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
-  .tile { background: rgba(255,255,255,.16); border-radius: 14px; padding: 10px 12px; min-width: 0; }
+  .summary { padding: 20px 22px; border-radius: 24px; color: #fff; margin-bottom: 16px;
+    background: linear-gradient(135deg, var(--gc), var(--gc2)); box-shadow: 0 6px 16px color-mix(in srgb, var(--gc) 25%, transparent); }
+  .summary .lab { opacity: .85; font-weight: 700; }
+  .summary .big { font-size: 38px; font-weight: 900; letter-spacing: -1px; line-height: 1.2; font-variant-numeric: tabular-nums; }
+  .summary .big small { font-size: 15px; font-weight: 700; opacity: .85; letter-spacing: 0; margin-left: 6px; }
+  .summary .sbar { height: 8px; border-radius: 8px; background: rgba(255,255,255,.25); margin-top: 10px; overflow: hidden; }
+  .summary .sbar i { display: block; height: 100%; background: #fff; border-radius: 8px; }
+  .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
+  .tile { background: rgba(255,255,255,.16); border-radius: 14px; padding: 8px 12px; min-width: 0; }
   .tile span { display: block; font-size: 12px; opacity: .85; }
-  .tile b { font-size: 20px; font-weight: 900; }
+  .tile b { font-size: 20px; font-weight: 900; font-variant-numeric: tabular-nums; }
 
-  /* ジャンルのピル */
-  .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
-  .tab { border-radius: 999px; display: inline-flex; align-items: center; gap: 7px; background: var(--card); border: 1px solid var(--line); font-size: 13px; padding: 9px 14px; }
-  .tab .dot { width: 10px; height: 10px; border-radius: 50%; }
-  .tab.active { background: linear-gradient(120deg, var(--gc, #2f6bff), var(--gc2, var(--gc, #5b3df5))); color: #fff; border-color: transparent; }
-  .tab.active .dot { background: #fff !important; }
+  /* 今日 */
+  .quick { display: flex; flex-wrap: wrap; gap: 8px; background: var(--card); border-radius: 18px; padding: 10px; margin-bottom: 18px; }
+  .quick input[type=text] { flex: 1 1 100%; }
+  .quick select { flex: 1; padding: 8px 12px; font-size: 13px; }
+  .quick button { flex: none; }
+  h2.sec { font-size: 14px; font-weight: 900; margin: 20px 4px 8px; display: flex; align-items: center; gap: 8px; }
+  h2.sec .n { font-size: 12px; color: var(--muted); font-weight: 700; }
+  h2.sec.over { color: var(--danger); }
+  .task { display: flex; align-items: center; gap: 12px; background: var(--card); border-radius: 16px; padding: 10px 8px 10px 14px; margin-bottom: 8px; position: relative; overflow: hidden; }
+  .task::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: linear-gradient(180deg, var(--gc), var(--gc2)); }
+  .task-main { flex: 1; min-width: 0; text-align: left; background: none; padding: 0; border-radius: 6px; font-weight: 400; }
+  .t-title { font-weight: 700; overflow-wrap: anywhere; }
+  .task.done .t-title { text-decoration: line-through; color: var(--muted); font-weight: 400; }
+  .task.done { opacity: .7; }
+  .star { background: none; padding: 4px 8px; font-size: 20px; line-height: 1; color: var(--muted); flex: none; }
+  .star.on { color: #f5a300; }
+  .linkrow { display: flex; width: 100%; align-items: center; gap: 10px; text-align: left; background: var(--card); border-radius: 16px; padding: 12px 14px; margin-bottom: 8px; font-weight: 700; }
+  .linkrow .grow { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  .linkrow .arrow { color: var(--muted); font-size: 13px; white-space: nowrap; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; background: linear-gradient(135deg, var(--gc), var(--gc2)); }
+  .hint { background: var(--card); border-radius: 18px; padding: 16px 18px; color: var(--muted); }
+  .hint b { color: var(--text); }
+  .hint ol { margin: 8px 0 12px; padding-left: 20px; }
 
-  /* ジャンル見出し */
-  .genre { margin-bottom: 26px; }
+  /* 目標 */
+  .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+  .pill { border-radius: 999px; display: inline-flex; align-items: center; gap: 7px; background: var(--card); border: 1px solid var(--line); font-size: 13px; padding: 8px 14px; }
+  .pill.active { background: linear-gradient(120deg, var(--gc), var(--gc2)); color: #fff; border-color: transparent; }
+  .pill.active .dot { background: #fff; }
+  .genre { margin-bottom: 24px; }
   .genre-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
   .gicon { width: 28px; height: 28px; border-radius: 10px; background: linear-gradient(135deg, var(--gc), var(--gc2)); flex: none; }
   .genre-head h2 { font-size: 15px; font-weight: 900; margin: 0; flex: 1; min-width: 0; overflow-wrap: anywhere; }
-  .meta { color: var(--muted); font-size: 12px; }
-  .genre-head .open { color: var(--gc); text-decoration: none; font-size: 12px; font-weight: 900; padding: 4px 12px; border-radius: 999px; background: color-mix(in srgb, var(--gc) 12%, transparent); white-space: nowrap; }
-
-  /* 目標カード */
-  .goals { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr)); gap: 10px 14px; align-items: start; }
-  .goal { position: relative; overflow: hidden; background: var(--card); border-radius: 16px; padding: 14px 16px 14px 22px; }
+  .chip { color: color-mix(in srgb, var(--gc) 72%, var(--text)); text-decoration: none; font-size: 12px; font-weight: 900; padding: 4px 12px; border-radius: 999px; background: color-mix(in srgb, var(--gc) 13%, transparent); white-space: nowrap; }
+  .goal { position: relative; overflow: hidden; background: var(--card); border-radius: 16px; padding: 14px 14px 12px 20px; margin-bottom: 10px; }
   .goal::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: linear-gradient(180deg, var(--gc), var(--gc2)); }
   .goal.done { opacity: .72; }
   .goal.done .title { text-decoration: line-through; color: var(--muted); }
-  .goal-head { display: flex; align-items: flex-start; gap: 10px; }
+  .goal-head { display: flex; align-items: flex-start; gap: 12px; cursor: pointer; }
   .goal-main { flex: 1; min-width: 0; }
   .title { font-weight: 900; font-size: 16px; overflow-wrap: anywhere; }
-  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
-  .tag { font-size: 12px; font-weight: 900; padding: 1px 9px; border-radius: 10px; color: var(--tc); background: color-mix(in srgb, var(--tc) 14%, transparent); }
-  .pct { font-size: 18px; font-weight: 900; letter-spacing: -.5px; }
-  .bar { height: 8px; background: color-mix(in srgb, var(--gc) 15%, transparent); border-radius: 8px; margin: 12px 0 6px; overflow: hidden; }
+  .pct { font-size: 18px; font-weight: 900; letter-spacing: -.5px; font-variant-numeric: tabular-nums; }
+  .caret { color: var(--muted); font-size: 12px; transition: transform .15s; align-self: center; }
+  .goal.open .caret { transform: rotate(180deg); }
+  .bar { height: 8px; background: color-mix(in srgb, var(--gc) 15%, transparent); border-radius: 8px; margin: 10px 0 2px; overflow: hidden; }
   .bar > i { display: block; height: 100%; background: linear-gradient(90deg, var(--gc), var(--gc2)); border-radius: 8px; }
-  .section { margin-top: 10px; }
-  .section h3 { font-size: 12px; font-weight: 900; color: var(--gc); letter-spacing: .05em; margin: 0 0 4px; }
-  .item { display: flex; align-items: center; gap: 10px; padding: 3px 0; }
-  .item span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
-  .item.done span { text-decoration: line-through; color: var(--muted); }
-  .add { margin-top: 6px; flex-wrap: nowrap; }
-  .add input[type=text] { padding: 6px 12px; font-size: 13px; min-width: 0; }
-  .add button { padding: 6px 12px; font-size: 13px; }
-  .empty { color: var(--muted); text-align: center; padding: 40px 0; }
+  .next { font-size: 13px; color: var(--muted); margin-top: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .next b { color: color-mix(in srgb, var(--gc) 72%, var(--text)); margin-right: 6px; }
+  .section { margin-top: 12px; }
+  .section h3 { font-size: 12px; font-weight: 900; color: color-mix(in srgb, var(--gc) 72%, var(--text)); letter-spacing: .05em; margin: 0 0 4px; }
+  .item { display: flex; align-items: center; gap: 10px; padding: 4px 0; }
+  .it-text { flex: 1; min-width: 0; text-align: left; background: none; padding: 2px 0; border-radius: 6px; font-weight: 400; display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; }
+  .it-text span:first-child { overflow-wrap: anywhere; min-width: 0; }
+  .item.done .it-text span:first-child { text-decoration: line-through; color: var(--muted); }
+  .add { margin-top: 6px; }
+  .add input[type=text] { padding: 7px 12px; font-size: 13px; }
+  .add button { padding: 7px 12px; font-size: 13px; flex: none; }
+  .goal-foot { display: flex; justify-content: flex-end; margin-top: 8px; }
+  .empty { color: var(--muted); font-size: 13px; display: flex; align-items: center; gap: 10px; padding: 0 4px; }
 
-  /* 追加ボタンとシート */
-  .fab { position: fixed; right: max(16px, env(safe-area-inset-right, 0px)); bottom: max(16px, env(safe-area-inset-bottom, 0px)); z-index: 10;
-    background: var(--brand); color: #fff; font-weight: 900; font-size: 15px; padding: 14px 20px; border-radius: 999px; box-shadow: 0 6px 16px rgba(47,107,255,.35); }
-  .sheet-back { position: fixed; inset: 0; background: rgba(0,0,0,.4); display: flex; align-items: flex-end; justify-content: center; z-index: 20; }
-  .sheet { width: 100%; max-width: 560px; background: var(--card); border-radius: 28px 28px 0 0; padding: 12px 20px calc(24px + env(safe-area-inset-bottom, 0px)); max-height: 92vh; overflow: auto; }
+  /* 設定 */
+  .panel { background: var(--card); border-radius: 18px; padding: 16px 18px; margin-bottom: 14px; }
+  .panel h2 { font-size: 15px; font-weight: 900; margin: 0 0 12px; }
+  .panel h3 { font-size: 12px; color: var(--muted); margin: 14px 0 8px; }
+  .panel h3:first-of-type { margin-top: 0; }
+  .swatches { display: flex; gap: 10px; flex-wrap: wrap; }
+  .sw { width: 36px; height: 36px; padding: 0; border-radius: 50%; border: 2px solid var(--card); flex: none; }
+  .sw.sel { outline: 3px solid var(--text); outline-offset: 1px; }
+  .grow-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .grow-row input[type=text] { flex: 1; }
+  .gpal { margin: 0 0 12px 46px; }
+  .switch { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+
+  /* 下部ナビ・追加ボタン・シート・トースト */
+  .nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 15; display: flex; justify-content: center; background: color-mix(in srgb, var(--card) 92%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  .nav button { flex: 1; max-width: 170px; background: none; border-radius: 0; padding: 8px 0 6px; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 11px; color: var(--muted); }
+  .nav button.active { color: color-mix(in srgb, var(--sg1) 80%, var(--text)); }
+  .nav svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .fab { position: fixed; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(76px + env(safe-area-inset-bottom, 0px)); z-index: 10;
+    background: linear-gradient(135deg, var(--sg1), var(--sg2)); color: #fff; font-weight: 900; font-size: 15px; padding: 14px 20px; border-radius: 999px; box-shadow: 0 6px 16px color-mix(in srgb, var(--sg1) 35%, transparent); }
+  .sheet-back { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: flex; align-items: flex-end; justify-content: center; z-index: 20; }
+  .sheet { width: 100%; max-width: 560px; background: var(--card); border-radius: 28px 28px 0 0; padding: 12px 20px calc(20px + env(safe-area-inset-bottom, 0px)); max-height: 92vh; overflow: auto; }
   .grab { width: 40px; height: 4px; background: var(--line); border-radius: 2px; margin: 0 auto 14px; }
   .sheet h3 { font-size: 20px; font-weight: 900; margin: 0 0 12px; }
-  .sheet .stack { display: flex; flex-direction: column; gap: 10px; }
-  .sheet hr { border: none; border-top: 1px solid var(--line); margin: 22px 0 18px; }
-  .sw { width: 34px; height: 34px; padding: 0; border-radius: 50%; border: 2px solid var(--card); }
-  .sw.sel { outline: 3px solid var(--text); outline-offset: 1px; }
-  .swatches { display: flex; gap: 10px; flex-wrap: wrap; }
+  .stack { display: flex; flex-direction: column; gap: 10px; }
+  .stack label { font-size: 12px; font-weight: 700; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
+  .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(80px + env(safe-area-inset-bottom, 0px)); z-index: 30; width: max-content; max-width: calc(100% - 32px); display: flex; align-items: center; gap: 12px; background: var(--text); color: var(--bg); border-radius: 14px; padding: 10px 10px 10px 16px; font-size: 13px; box-shadow: 0 6px 20px rgba(0,0,0,.25); }
+  .toast button { background: none; color: inherit; text-decoration: underline; white-space: nowrap; padding: 4px 8px; }
 
-  /* 拡大ページ */
+  /* ジャンルの拡大ページ */
   .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 16px; }
   .stat { background: var(--card); border-radius: 16px; padding: 12px 16px; }
-  .stat b { display: block; font-size: 28px; font-weight: 900; letter-spacing: -1px; background: linear-gradient(120deg, var(--gc), var(--gc2)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .stat b { display: block; font-size: 28px; font-weight: 900; letter-spacing: -1px; color: var(--gc); background: linear-gradient(120deg, var(--gc), var(--gc2)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
   .stat span { font-size: 12px; color: var(--muted); }
   .focus main, .focus header { max-width: 1200px; }
-  .focus #tabs, .focus #summary, .focus header .row { display: none; }
+  .focus .nav, .focus #tabs, .focus #gSummary { display: none; }
   .focus .genre-head { padding: 22px 26px; border-radius: 24px; background: linear-gradient(120deg, var(--gc), var(--gc2)); color: #fff; box-shadow: 0 6px 16px color-mix(in srgb, var(--gc) 25%, transparent); margin-bottom: 14px; }
   .focus .gicon { display: none; }
   .focus .genre-head h2 { font-size: 30px; letter-spacing: -1px; }
   .focus .genre-head .meta { color: rgba(255,255,255,.92); font-weight: 700; }
-  .focus .genre-head .open { color: #fff; background: rgba(255,255,255,.22); }
-  .focus .genre-head .ghost { color: #fff; }
-  .focus .goals { grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); }
-  .focus .goal { padding: 18px 20px 18px 26px; }
-  .focus .title { font-size: 18px; }
-  .focus .item { font-size: 16px; padding: 4px 0; }
+  .focus .genre-head .chip { color: #fff; background: rgba(255,255,255,.22); }
+  .focus .goals { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 0 14px; align-items: start; }
+  .focus .fab { bottom: max(16px, env(safe-area-inset-bottom, 0px)); }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
 <body>
 <header>
   <h1>ジャンル別 目標管理</h1>
-  <div class="row">
-    <button id="exportBtn">書き出し</button>
-    <button id="importBtn">読み込み</button>
-    <input id="importFile" type="file" accept="application/json" hidden>
-  </div>
+  <span id="dateLabel"></span>
 </header>
 <main>
-  <div id="summary"></div>
-  <div class="tabs" id="tabs"></div>
-  <div id="list"></div>
+  <section id="vToday">
+    <div id="tSummary"></div>
+    <div class="quick">
+      <input type="text" id="qTitle" placeholder="今日やることを追加" aria-label="今日やることを追加">
+      <select id="qGoal" aria-label="どの目標のTodoか"></select>
+      <button class="primary" id="qAdd">追加</button>
+    </div>
+    <div id="tList"></div>
+  </section>
+  <section id="vGoals" hidden>
+    <div id="gSummary"></div>
+    <div class="tabs" id="tabs"></div>
+    <div id="list"></div>
+  </section>
+  <section id="vSettings" hidden></section>
 </main>
 
-<button class="fab" id="fab">＋ 目標を追加</button>
+<button class="fab" id="fab" hidden>＋ 目標を追加</button>
+
+<nav class="nav" id="nav">
+  <button data-view="today"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/></svg>今日</button>
+  <button data-view="goals"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>目標</button>
+  <button data-view="settings"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>設定</button>
+</nav>
 
 <div class="sheet-back" id="sheetBack" hidden>
-  <div class="sheet" role="dialog" aria-label="追加">
-    <div class="grab"></div>
-    <h3>目標を追加</h3>
-    <div class="stack">
-      <select id="nGenre"></select>
-      <input type="text" id="nTitle" placeholder="目標（例: TOEIC 800点）">
-      <input type="date" id="nDue" title="期限">
-      <button class="primary wide" id="nAdd">追加</button>
-    </div>
-    <hr>
-    <h3>ジャンルを追加</h3>
-    <div class="stack">
-      <input type="text" id="gName" placeholder="ジャンル名（例: 仕事、健康、学習）">
-      <div class="swatches" id="swatches"></div>
-      <button class="wide" id="gAdd">ジャンルを追加</button>
-    </div>
-  </div>
+  <div class="sheet" role="dialog" aria-modal="true" id="sheet"></div>
 </div>
+<div class="toast" id="toast" hidden></div>
+<input id="importFile" type="file" accept="application/json" hidden>
 
 <script>
 const KEY = 'genre-goals-v1';
+const VIEW_KEY = 'genre-goals-view';
 const uid = () => Math.random().toString(36).slice(2, 10);
 const PALETTE = [
-  { name: '青', c1: '#2f6bff', c2: '#00c2ff' },
-  { name: 'ピンク', c1: '#ff2d8a', c2: '#ff7a45' },
-  { name: '紫ピンク', c1: '#7a4dff', c2: '#ff3fd0' },
-  { name: '緑', c1: '#00a870', c2: '#00c2a8' },
-  { name: 'オレンジ', c1: '#f26a00', c2: '#ff9a1f' },
-  { name: '赤', c1: '#e5173f', c2: '#ff5d73' },
+  ['青', '#2f6bff', '#00c2ff'], ['紺', '#1f3fb5', '#2f6bff'], ['ティール', '#0b8f9c', '#19c3c3'], ['緑', '#00a870', '#00c2a8'],
+  ['ピンク', '#ff2d8a', '#ff7a45'], ['紫ピンク', '#7a4dff', '#ff3fd0'], ['紫', '#6a3df5', '#9a6bff'], ['オレンジ', '#f26a00', '#ff9a1f'],
+  ['赤', '#e5173f', '#ff5d73'], ['グレー', '#5b6474', '#8a93a5'],
 ];
-let pick = 0;
+const THEMES = [
+  ['青→ピンク', '#2f6bff', '#ff2d8a'], ['青→紫', '#2979ff', '#aa00ff'], ['シアン→青', '#0097b2', '#2962ff'],
+  ['紫→ピンク', '#8e2de2', '#ff2d95'], ['ピンク→オレンジ', '#ff2d95', '#ff7a00'], ['緑→シアン', '#00a870', '#0097b2'],
+];
 const DEFAULT = {
   genres: [
     { id: 'g1', name: '仕事', color: '#2f6bff', color2: '#00c2ff' },
@@ -185,15 +230,44 @@ const DEFAULT = {
   v: 2,
 };
 
-let state = load();
-let filter = 'all';
+// ---- 日付 ----
+const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const today = () => ymd(new Date());
+const addDays = n => { const d = new Date(); d.setDate(d.getDate() + n); return ymd(d); };
+function daysLeft(due) {
+  const t = new Date(); t.setHours(0, 0, 0, 0);
+  return Math.round((new Date(due + 'T00:00:00') - t) / 864e5);
+}
 
+// ---- 状態 ----
+let state = load();
+let view = 'today';
+try { view = localStorage.getItem(VIEW_KEY) || 'today'; } catch (e) {}
+let filter = 'all';
+const expanded = new Set();
+let refocus = null;
+let openPal = null;
+
+function normalize(s) {
+  const m = { '#4f6bed': 0, '#5b3df5': 0, '#2da44e': 1, '#00a870': 1, '#e8890c': 2, '#f26a00': 2 };
+  s.genres.forEach(g => { if (g.color2) return; const d = DEFAULT.genres[m[g.color]]; if (d) { g.color = d.color; g.color2 = d.color2; } else g.color2 = g.color; });
+  if (!(s.v >= 2)) { DEFAULT.genres.slice(3).forEach(d => { if (!s.genres.some(g => g.name === d.name)) s.genres.push({ ...d }); }); s.v = 2; }
+  s.goals.forEach(g => { g.milestones = g.milestones || []; g.todos = g.todos || []; });
+  s.inbox = s.inbox || [];
+  s.settings = Object.assign({ theme: 'auto', preset: 0, showDone: true }, s.settings);
+  return s;
+}
 function load() {
-  try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.genres && s.goals) { const m = { '#4f6bed': 0, '#5b3df5': 0, '#2da44e': 1, '#00a870': 1, '#e8890c': 2, '#f26a00': 2 }; s.genres.forEach(g => { if (g.color2) return; const d = DEFAULT.genres[m[g.color]]; if (d) { g.color = d.color; g.color2 = d.color2; } else g.color2 = g.color; }); if (!(s.v >= 2)) { DEFAULT.genres.slice(3).forEach(d => { if (!s.genres.some(g => g.name === d.name)) s.genres.push({ ...d }); }); s.v = 2; } return s; } } catch (e) {}
-  return structuredClone(DEFAULT);
+  try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && Array.isArray(s.genres) && Array.isArray(s.goals)) return normalize(s); } catch (e) {}
+  return normalize(structuredClone(DEFAULT));
 }
 function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
-function update(fn) { fn(); save(); render(); }
+// undoMsg を渡すと、変更後に「元に戻す」付きの通知を出す
+function update(fn, undoMsg) {
+  const snap = undoMsg ? JSON.stringify(state) : null;
+  fn(); save(); render();
+  if (undoMsg) toast(undoMsg, '元に戻す', () => { state = JSON.parse(snap); save(); closeSheet(); render(); });
+}
 
 function el(tag, props = {}, ...kids) {
   const n = document.createElement(tag);
@@ -203,60 +277,198 @@ function el(tag, props = {}, ...kids) {
     else if (k === 'style') n.style.cssText = v;
     else n[k] = v;
   }
-  for (const c of kids.flat()) if (c != null) n.append(c);
+  for (const c of kids.flat()) if (c != null && c !== false) n.append(c);
   return n;
 }
+const $ = id => document.getElementById(id);
+const gstyle = g => g ? `--gc:${g.color};--gc2:${g.color2}` : '';
+const genreOf = goal => state.genres.find(g => g.id === goal.genreId);
 
 function progress(goal) {
   const all = [...goal.milestones, ...goal.todos];
   if (!all.length) return goal.done ? 100 : 0;
   return Math.round(all.filter(x => x.done).length / all.length * 100);
 }
+function sortGoals(a) {
+  const k = x => x.due || '9999';
+  return a.slice().sort((x, y) => (!!x.done - !!y.done) || (k(x) < k(y) ? -1 : k(x) > k(y) ? 1 : 0));
+}
+// すべての項目を {it, goal, genre, kind} で列挙する。目標なしのメモは kind: 'inbox'
+function allItems() {
+  const out = [];
+  for (const goal of state.goals) {
+    const genre = genreOf(goal); if (!genre) continue;
+    for (const kind of ['todos', 'milestones']) for (const it of goal[kind]) out.push({ it, goal, genre, kind });
+  }
+  for (const it of state.inbox) out.push({ it, kind: 'inbox' });
+  return out;
+}
+function setDone(x, v) { x.done = v; if (v) x.doneAt = today(); else delete x.doneAt; }
+function toggleItem(e) {
+  update(() => setDone(e.it, !e.it.done));
+  const g = e.goal;
+  if (g && !g.done && e.it.done && [...g.milestones, ...g.todos].every(x => x.done)) {
+    const id = g.id;
+    toast(`「${g.title}」の項目がすべて完了しました`, '目標を達成にする', () => update(() => { const t = state.goals.find(x => x.id === id); if (t) setDone(t, true); }));
+  }
+}
 
-function itemList(goal, kind, label, placeholder) {
-  const list = goal[kind];
-  const input = el('input', { type: 'text', placeholder });
+// ---- 小さな部品 ----
+function tag(text, color) { return el('span', { class: 'tag', style: `--tc:${color}` }, text); }
+function dueTag(due) {
+  if (!due) return null;
+  const d = daysLeft(due);
+  if (d < 0) return tag(`${-d}日超過`, 'var(--danger)');
+  if (d === 0) return tag('今日まで', 'var(--warn)');
+  if (d === 1) return tag('明日まで', 'var(--warn)');
+  if (d <= 7) return tag(`あと${d}日`, 'var(--warn)');
+  const [, mo, da] = due.split('-');
+  return tag(`${+mo}/${+da}まで`, 'var(--muted)');
+}
+function check(checked, fn, title) { return el('input', { type: 'checkbox', checked: !!checked, title, onchange: fn }); }
+function starBtn(e) {
+  return el('button', { class: 'star' + (e.it.focus ? ' on' : ''), title: e.it.focus ? '今日やるから外す' : '今日やるに入れる', ariaPressed: String(!!e.it.focus),
+    onclick: () => update(() => e.it.focus = !e.it.focus) }, e.it.focus ? '★' : '☆');
+}
+function summaryCard(label, big, small, pct, tiles, style) {
+  return el('div', { class: 'summary', style: style || '' },
+    el('div', { class: 'lab' }, label),
+    el('div', { class: 'big' }, big, small ? el('small', {}, small) : null),
+    el('div', { class: 'sbar' }, el('i', { style: `width:${pct}%` })),
+    el('div', { class: 'tiles' }, tiles.map(([l, v]) => el('div', { class: 'tile' }, el('span', {}, l), el('b', {}, v)))));
+}
+function toast(msg, label, fn) {
+  const t = $('toast');
+  clearTimeout(toast.timer);
+  t.replaceChildren(el('span', {}, msg), label ? el('button', { onclick: () => { t.hidden = true; fn(); } }, label) : null);
+  t.hidden = false;
+  toast.timer = setTimeout(() => { t.hidden = true; }, 6000);
+}
+
+// ---- 今日 ----
+function taskRow(e) {
+  const { it, goal, genre, kind } = e;
+  const tags = [];
+  if (!it.done) { const d = dueTag(it.due); if (d) tags.push(d); }
+  tags.push(goal ? tag(goal.title, genre.color) : tag('メモ', 'var(--muted)'));
+  return el('div', { class: 'task' + (it.done ? ' done' : ''), style: gstyle(genre) },
+    check(it.done, () => toggleItem(e), '完了'),
+    el('button', { class: 'task-main', onclick: () => openItemSheet(e) }, el('div', { class: 't-title' }, it.title), el('div', { class: 'tags' }, tags)),
+    kind === 'inbox' || it.done ? null : starBtn(e));
+}
+function sec(title, n, cls) { return el('h2', { class: 'sec' + (cls ? ' ' + cls : '') }, title, n != null ? el('span', { class: 'n' }, n + '件') : null); }
+function gotoGoal(goal) {
+  view = 'goals'; filter = 'all'; expanded.add(goal.id);
+  if (goal.done) state.settings.showDone = true;
+  refocus = goal.id + 'todos';
+  render();
+  $('goal-' + goal.id)?.scrollIntoView({ block: 'center' });
+}
+function streak(days) {
+  let n = 0, i = days.has(today()) ? 0 : -1;
+  while (days.has(addDays(i))) { n++; i--; }
+  return n;
+}
+
+function renderToday() {
+  const T = today(), W = addDays(7), weekAgo = addDays(-6);
+  const items = allItems().filter(e => !e.goal || !e.goal.done || e.it.done);
+  const overdue = items.filter(e => !e.it.done && e.it.due && e.it.due < T);
+  const todo = items.filter(e => !e.it.done && !(e.it.due && e.it.due < T) && (e.it.focus || e.it.due === T || e.kind === 'inbox'));
+  const soon = items.filter(e => !e.it.done && e.kind !== 'inbox' && !e.it.focus && e.it.due > T && e.it.due <= W).sort((a, b) => a.it.due < b.it.due ? -1 : 1);
+  const doneToday = items.filter(e => e.it.done && e.it.doneAt === T);
+  const active = state.goals.filter(g => !g.done && genreOf(g));
+  const nearGoals = sortGoals(active.filter(g => g.due && g.due <= W));
+
+  // 次の一手: 進行中の各目標から、まだ今日に入っていない最初の未完了項目
+  const picked = new Set([...overdue, ...todo, ...soon].map(e => e.it));
+  const next = [], blank = [];
+  for (const goal of sortGoals(active)) {
+    const genre = genreOf(goal);
+    const cands = [...goal.todos.map(it => ({ it, goal, genre, kind: 'todos' })), ...goal.milestones.map(it => ({ it, goal, genre, kind: 'milestones' }))];
+    if (!cands.length) { blank.push(goal); continue; }
+    if (cands.some(e => !e.it.done && picked.has(e.it))) continue;
+    const c = cands.find(e => !e.it.done);
+    if (c) next.push(c);
+  }
+
+  const everything = [...allItems().map(e => e.it), ...state.goals];
+  const doneDays = new Set(everything.filter(x => x.done && x.doneAt).map(x => x.doneAt));
+  const weekDone = everything.filter(x => x.done && x.doneAt >= weekAgo).length;
+  const total = doneToday.length + todo.length + overdue.length;
+  $('tSummary').replaceChildren(summaryCard('今日やること', `${doneToday.length} / ${total}`, '完了', total ? doneToday.length / total * 100 : 0,
+    [['連続', streak(doneDays) + '日'], ['この7日間', weekDone + '件'], ['進行中の目標', active.length + '件']]));
+
+  const q = $('qGoal'), prev = q.value;
+  q.replaceChildren(el('option', { value: '', textContent: '目標なし（メモ）' }),
+    ...state.genres.map(g => { const gs = sortGoals(active.filter(x => x.genreId === g.id)); return gs.length ? el('optgroup', { label: g.name }, gs.map(x => el('option', { value: x.id, textContent: x.title }))) : null; }).filter(Boolean));
+  q.value = [...q.options].some(o => o.value === prev) ? prev : '';
+
+  const out = [];
+  if (!state.goals.length && !state.inbox.length) {
+    out.push(el('div', { class: 'hint' }, el('b', {}, 'はじめかた'),
+      el('ol', {}, el('li', {}, '「目標」タブで、ジャンルごとに目標を作る'), el('li', {}, '目標の中に、細かな目標やTodoを足す'), el('li', {}, '☆を押すと、ここ「今日」に並ぶ')),
+      el('button', { class: 'primary', onclick: () => { view = 'goals'; render(); openGoalSheet(); } }, '最初の目標を作る')));
+  }
+  if (overdue.length) out.push(sec('期限切れ', overdue.length, 'over'), ...overdue.map(taskRow));
+  if (todo.length) out.push(sec('今日やる', todo.length), ...todo.map(taskRow));
+  else if (state.goals.length || state.inbox.length) out.push(sec('今日やる'), el('div', { class: 'hint' }, doneToday.length ? '今日の分はすべて完了しました。' : '下の「次の一手」の☆を押すか、上の入力欄から追加してください。'));
+  if (next.length) out.push(sec('次の一手', null), ...next.slice(0, 5).map(taskRow));
+  if (blank.length) out.push(sec('最初の一歩が決まっていない目標', blank.length),
+    ...blank.slice(0, 3).map(g => el('button', { class: 'linkrow', style: gstyle(genreOf(g)), onclick: () => gotoGoal(g) }, el('span', { class: 'dot' }), el('span', { class: 'grow' }, g.title), el('span', { class: 'arrow' }, 'Todoを決める ›'))));
+  if (soon.length) out.push(sec('7日以内に期限', soon.length), ...soon.map(taskRow));
+  if (nearGoals.length) out.push(sec('期限が近い目標', nearGoals.length),
+    ...nearGoals.map(g => el('button', { class: 'linkrow', style: gstyle(genreOf(g)), onclick: () => gotoGoal(g) }, el('span', { class: 'dot' }), el('span', { class: 'grow' }, g.title), dueTag(g.due), el('span', { class: 'pct' }, progress(g) + '%'))));
+  if (doneToday.length) out.push(sec('今日完了', doneToday.length), ...doneToday.map(taskRow));
+  $('tList').replaceChildren(...out);
+}
+
+function quickAdd() {
+  const title = $('qTitle').value.trim(); if (!title) return;
+  const goal = state.goals.find(g => g.id === $('qGoal').value);
+  update(() => goal ? goal.todos.push({ id: uid(), title, done: false, focus: true }) : state.inbox.push({ id: uid(), title, done: false }));
+  $('qTitle').value = ''; $('qTitle').focus();
+}
+$('qAdd').onclick = quickAdd;
+$('qTitle').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) quickAdd(); });
+
+// ---- 目標 ----
+function itemList(goal, genre, kind, label, placeholder) {
+  const key = goal.id + kind;
+  const input = el('input', { type: 'text', placeholder, ariaLabel: placeholder });
+  input.dataset.key = key;
   const add = () => {
     const t = input.value.trim();
-    if (t) update(() => list.push({ id: uid(), title: t, done: false }));
+    if (t) { refocus = key; update(() => goal[kind].push({ id: uid(), title: t, done: false })); }
   };
   input.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) add(); });
   return el('div', { class: 'section' },
     el('h3', {}, label),
-    list.map(it => el('div', { class: 'item' + (it.done ? ' done' : '') },
-      el('input', { type: 'checkbox', checked: it.done, onchange: () => update(() => it.done = !it.done) }),
-      el('span', {}, it.title),
-      el('button', { class: 'ghost', title: '削除', onclick: () => update(() => goal[kind] = list.filter(x => x !== it)) }, '✕'))),
+    goal[kind].map(it => { const e = { it, goal, genre, kind }; return el('div', { class: 'item' + (it.done ? ' done' : '') },
+      check(it.done, () => toggleItem(e), '完了'),
+      el('button', { class: 'it-text', title: '編集', onclick: () => openItemSheet(e) }, el('span', {}, it.title), it.done ? null : dueTag(it.due)),
+      it.done ? null : starBtn(e)); }),
     el('div', { class: 'row add' }, input, el('button', { onclick: add }, '追加')));
 }
 
-function daysLeft(due) {
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  return Math.round((new Date(due + 'T00:00:00') - today) / 864e5);
-}
-
-function tag(text, color) { return el('span', { class: 'tag', style: `--tc:${color}` }, text); }
-
-function goalCard(goal, genre) {
-  const pct = progress(goal);
-  const tags = [];
-  if (goal.done) tags.push(tag('達成', 'var(--ok)'));
-  else if (goal.due) {
-    const d = daysLeft(goal.due);
-    if (d < 0) tags.push(tag(`期限切れ ${goal.due}`, 'var(--danger)'));
-    else if (d === 0) tags.push(tag('今日まで', 'var(--warn)'));
-    else tags.push(tag(`あと${d}日`, d <= 7 ? 'var(--warn)' : 'var(--muted)'));
-  }
-  tags.push(tag(genre.name, genre.color));
-  return el('div', { class: 'goal' + (goal.done ? ' done' : ''), style: `--gc:${genre.color};--gc2:${genre.color2}` },
-    el('div', { class: 'goal-head' },
-      el('input', { type: 'checkbox', checked: goal.done, title: '目標を達成', onchange: () => update(() => goal.done = !goal.done) }),
-      el('div', { class: 'goal-main' }, el('div', { class: 'title' }, goal.title), el('div', { class: 'tags' }, tags)),
-      el('span', { class: 'pct' }, pct + '%'),
-      el('button', { class: 'ghost', title: '目標を削除', onclick: () => confirm('この目標を削除しますか？') && update(() => state.goals = state.goals.filter(g => g !== goal)) }, '🗑')),
+function goalCard(goal, genre, forceOpen) {
+  const pct = progress(goal), open = forceOpen || expanded.has(goal.id);
+  const all = [...goal.todos, ...goal.milestones];
+  const nextIt = all.find(x => !x.done);
+  const tags = [goal.done ? tag('達成', 'var(--ok)') : dueTag(goal.due), all.length ? tag(`${all.filter(x => x.done).length}/${all.length} 完了`, genre.color) : null];
+  const head = el('div', { class: 'goal-head', onclick: e => { if (forceOpen || e.target.closest('input,button,a')) return; expanded.has(goal.id) ? expanded.delete(goal.id) : expanded.add(goal.id); render(); } },
+    check(goal.done, () => update(() => setDone(goal, !goal.done)), '目標を達成'),
+    el('div', { class: 'goal-main' }, el('div', { class: 'title' }, goal.title), el('div', { class: 'tags' }, tags)),
+    el('span', { class: 'pct' }, pct + '%'),
+    forceOpen ? null : el('span', { class: 'caret' }, '▼'));
+  return el('div', { class: 'goal' + (goal.done ? ' done' : '') + (open ? ' open' : ''), id: 'goal-' + goal.id, style: gstyle(genre) },
+    head,
     el('div', { class: 'bar' }, el('i', { style: `width:${pct}%` })),
-    itemList(goal, 'milestones', '細かな目標', '細かな目標を追加（例: 単語帳1冊終える）'),
-    itemList(goal, 'todos', 'Todo', 'Todoを追加'));
+    open ? [
+      itemList(goal, genre, 'milestones', '細かな目標', '細かな目標を追加（例: 単語帳1冊終える）'),
+      itemList(goal, genre, 'todos', 'Todo', 'Todoを追加'),
+      el('div', { class: 'goal-foot' }, el('button', { class: 'text', onclick: () => openGoalSheet(goal) }, '目標を編集')),
+    ] : (goal.done ? null : el('div', { class: 'next' }, nextIt ? [el('b', {}, '次'), nextIt.title] : (all.length ? 'すべて完了。達成にチェックできます' : 'タップしてTodoを追加'))));
 }
 
 function focusGenre() {
@@ -264,123 +476,188 @@ function focusGenre() {
   return m ? state.genres.find(g => g.id === m[1]) : undefined;
 }
 window.addEventListener('hashchange', () => render());
-
 function stat(label, value) { return el('div', { class: 'stat' }, el('b', {}, value), el('span', {}, label)); }
 
-function render() {
-  const focus = focusGenre();
-  document.body.classList.toggle('focus', !!focus);
-  document.title = focus ? `${focus.name} | ジャンル別 目標管理` : 'ジャンル別 目標管理';
-  const cur = focus ? focus.id : filter;
-  // tabs
-  const tabs = document.getElementById('tabs');
-  tabs.replaceChildren(
-    el('button', { class: 'tab' + (filter === 'all' ? ' active' : ''), onclick: () => { filter = 'all'; render(); } }, 'すべて'),
-    ...state.genres.map(g => el('button', { class: 'tab' + (filter === g.id ? ' active' : ''), style: `--gc:${g.color};--gc2:${g.color2}`, onclick: () => { filter = g.id; render(); } },
-      el('span', { class: 'dot', style: `background:linear-gradient(120deg,${g.color},${g.color2})` }), g.name)));
-
-  // summary
+function renderGoals(focus) {
+  const cur = focus ? focus.id : (state.genres.some(g => g.id === filter) ? filter : 'all');
+  const showDone = state.settings.showDone;
   const sg = cur === 'all' ? null : state.genres.find(g => g.id === cur);
-  const sGoals = state.goals.filter(x => cur === 'all' || x.genreId === cur);
-  const sAvg = sGoals.length ? Math.round(sGoals.map(progress).reduce((a, b) => a + b, 0) / sGoals.length) : 0;
-  const sMs = sGoals.flatMap(x => x.milestones), sTd = sGoals.flatMap(x => x.todos);
-  const summary = document.getElementById('summary');
-  summary.replaceChildren(el('div', { class: 'summary', style: sg ? `--sg1:${sg.color};--sg2:${sg.color2}` : '' },
-    el('div', { class: 'lab' }, sg ? `${sg.name}の進捗` : '全体の進捗'),
-    el('div', { class: 'big' }, sAvg + '%'),
-    el('div', { class: 'tiles' },
-      el('div', { class: 'tile' }, el('span', {}, '目標'), el('b', {}, `${sGoals.filter(x => x.done).length}/${sGoals.length}`)),
-      el('div', { class: 'tile' }, el('span', {}, '細かな目標'), el('b', {}, `${sMs.filter(i => i.done).length}/${sMs.length}`)),
-      el('div', { class: 'tile' }, el('span', {}, 'Todo'), el('b', {}, `${sTd.filter(i => i.done).length}/${sTd.length}`)))));
+  const sGoals = state.goals.filter(x => genreOf(x) && (cur === 'all' || x.genreId === cur));
+  const avgOf = gs => gs.length ? Math.round(gs.map(progress).reduce((a, b) => a + b, 0) / gs.length) : 0;
+  const cnt = a => `${a.filter(i => i.done).length}/${a.length}`;
+  const sAvg = avgOf(sGoals);
+  $('gSummary').replaceChildren(summaryCard(sg ? `${sg.name}の進捗` : '全体の進捗', sAvg + '%', null, sAvg,
+    [['目標', cnt(sGoals)], ['細かな目標', cnt(sGoals.flatMap(x => x.milestones))], ['Todo', cnt(sGoals.flatMap(x => x.todos))]], gstyle(sg)));
 
-  // genre select
-  const sel = document.getElementById('nGenre');
-  const prev = sel.value;
-  sel.replaceChildren(...state.genres.map(g => el('option', { value: g.id, textContent: g.name })));
-  sel.value = cur !== 'all' ? cur : (state.genres.some(g => g.id === prev) ? prev : (state.genres[0]?.id ?? ''));
+  $('tabs').replaceChildren(
+    el('button', { class: 'pill' + (cur === 'all' ? ' active' : ''), onclick: () => { filter = 'all'; render(); } }, 'すべて'),
+    ...state.genres.map(g => el('button', { class: 'pill' + (cur === g.id ? ' active' : ''), style: gstyle(g), onclick: () => { filter = g.id; render(); } }, el('span', { class: 'dot' }), g.name)));
 
-  // list
-  const list = document.getElementById('list');
   const shown = state.genres.filter(g => cur === 'all' || g.id === cur);
-  if (!shown.length) { list.replaceChildren(el('div', { class: 'empty' }, 'ジャンルを追加してください')); return; }
-  list.replaceChildren(...shown.map(g => {
-    const goals = state.goals.filter(x => x.genreId === g.id);
-    const pcts = goals.map(progress);
-    const avg = pcts.length ? Math.round(pcts.reduce((a, b) => a + b, 0) / pcts.length) : 0;
-    return el('section', { class: 'genre', style: `--gc:${g.color};--gc2:${g.color2}` },
+  if (!shown.length) { $('list').replaceChildren(el('div', { class: 'hint' }, 'ジャンルがありません。「設定」から追加してください。')); return; }
+  $('list').replaceChildren(...shown.map(g => {
+    const goals = sortGoals(state.goals.filter(x => x.genreId === g.id));
+    const vis = goals.filter(x => showDone || !x.done), hid = goals.length - vis.length;
+    const avg = avgOf(goals);
+    return el('section', { class: 'genre', style: gstyle(g) },
       el('div', { class: 'genre-head' },
         el('span', { class: 'gicon' }),
         el('h2', {}, g.name),
-        el('span', { class: 'meta' }, `${goals.length}件 / 平均 ${avg}%`),
-        focus ? el('a', { class: 'open', href: '#' }, '← 一覧へ')
-              : el('a', { class: 'open', href: location.href.split('#')[0] + '#genre-' + g.id, target: '_blank', rel: 'noopener', title: 'このジャンルを別タブで大きく開く' }, '拡大表示 ↗'),
-        el('button', { class: 'ghost', title: 'ジャンルを削除', onclick: () => confirm(`「${g.name}」とその目標をすべて削除しますか？`) && update(() => {
-          state.genres = state.genres.filter(x => x !== g);
-          state.goals = state.goals.filter(x => x.genreId !== g.id);
-          if (filter === g.id) filter = 'all';
-        }) }, '🗑')),
+        el('span', { class: 'meta' }, goals.length ? `${goals.length}件 / 平均 ${avg}%` : ''),
+        focus ? el('a', { class: 'chip', href: '#' }, '← 一覧へ')
+              : el('a', { class: 'chip', href: location.href.split('#')[0] + '#genre-' + g.id, target: '_blank', rel: 'noopener', title: 'このジャンルを別タブで大きく開く' }, '拡大 ↗')),
       focus ? el('div', { class: 'stats' },
-        stat('目標 達成', `${goals.filter(x => x.done).length} / ${goals.length}`),
-        stat('細かな目標', `${goals.flatMap(x => x.milestones).filter(i => i.done).length} / ${goals.flatMap(x => x.milestones).length}`),
-        stat('Todo', `${goals.flatMap(x => x.todos).filter(i => i.done).length} / ${goals.flatMap(x => x.todos).length}`),
+        stat('目標 達成', cnt(goals).replace('/', ' / ')),
+        stat('細かな目標', cnt(goals.flatMap(x => x.milestones)).replace('/', ' / ')),
+        stat('Todo', cnt(goals.flatMap(x => x.todos)).replace('/', ' / ')),
         stat('平均進捗', avg + '%')) : null,
-      goals.length ? el('div', { class: 'goals' }, goals.map(x => goalCard(x, g))) : el('div', { class: 'meta' }, 'まだ目標がありません'));
+      vis.length ? el('div', { class: 'goals' }, vis.map(x => goalCard(x, g, !!focus))) : null,
+      el('div', { class: 'empty' },
+        goals.length ? null : 'まだ目標がありません',
+        hid ? `達成済み ${hid}件は非表示` : null,
+        el('button', { class: 'chip', onclick: () => openGoalSheet(null, g.id) }, '＋ 追加')));
   }));
 }
 
-// bottom sheet
-const sheetBack = document.getElementById('sheetBack');
-function openSheet() { sheetBack.hidden = false; document.getElementById('nTitle').focus(); }
-function closeSheet() { sheetBack.hidden = true; }
-document.getElementById('fab').onclick = openSheet;
-sheetBack.addEventListener('click', e => { if (e.target === sheetBack) closeSheet(); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
-
-// add genre
-document.getElementById('gAdd').onclick = () => {
-  const name = document.getElementById('gName').value.trim();
-  if (!name) return;
-  update(() => state.genres.push({ id: uid(), name, color: PALETTE[pick].c1, color2: PALETTE[pick].c2 }));
-  document.getElementById('gName').value = '';
-  closeSheet();
-};
-// add goal
-function addGoal() {
-  const title = document.getElementById('nTitle').value.trim();
-  const genreId = document.getElementById('nGenre').value;
-  if (!title || !genreId) return;
-  update(() => state.goals.push({ id: uid(), genreId, title, due: document.getElementById('nDue').value, done: false, milestones: [], todos: [] }));
-  document.getElementById('nTitle').value = '';
-  document.getElementById('nDue').value = '';
-  closeSheet();
+// ---- シート ----
+function openSheet(title, ...body) {
+  $('sheet').replaceChildren(el('div', { class: 'grab' }), el('h3', {}, title), el('div', { class: 'stack' }, body));
+  $('sheet').setAttribute('aria-label', title);
+  $('sheetBack').hidden = false;
 }
-document.getElementById('nAdd').onclick = addGoal;
-document.getElementById('nTitle').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) addGoal(); });
+function closeSheet() { $('sheetBack').hidden = true; }
+$('sheetBack').addEventListener('click', e => { if (e.target === $('sheetBack')) closeSheet(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
+const field = (label, input) => el('label', {}, label, input);
 
-// export / import
-document.getElementById('exportBtn').onclick = () => {
-  const a = el('a', { href: URL.createObjectURL(new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' })), download: 'goals.json' });
+function openGoalSheet(goal, genreId) {
+  const sel = el('select', {}, state.genres.map(g => el('option', { value: g.id, textContent: g.name })));
+  sel.value = goal ? goal.genreId : (genreId || (filter !== 'all' ? filter : state.genres[0]?.id) || '');
+  const title = el('input', { type: 'text', value: goal ? goal.title : '', placeholder: '目標（例: TOEIC 800点）' });
+  const due = el('input', { type: 'date', value: goal?.due || '' });
+  const saveIt = () => {
+    const t = title.value.trim(); if (!t || !sel.value) { title.focus(); return; }
+    closeSheet();
+    if (goal) update(() => { goal.title = t; goal.genreId = sel.value; goal.due = due.value; });
+    else { const id = uid(); expanded.add(id); refocus = id + 'todos'; update(() => state.goals.push({ id, genreId: sel.value, title: t, due: due.value, done: false, milestones: [], todos: [] })); }
+  };
+  title.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) saveIt(); });
+  openSheet(goal ? '目標を編集' : '目標を追加',
+    field('ジャンル', sel), field('目標', title), field('期限（なくてもOK）', due),
+    el('button', { class: 'primary wide', onclick: saveIt }, goal ? '保存' : '追加'),
+    goal ? el('button', { class: 'text danger', onclick: () => { closeSheet(); update(() => state.goals = state.goals.filter(g => g !== goal), `「${goal.title}」を削除しました`); } }, 'この目標を削除') : null);
+  title.focus();
+}
+
+function openItemSheet(e) {
+  const { it, goal, kind } = e;
+  const list = () => kind === 'inbox' ? state.inbox : goal[kind];
+  const title = el('input', { type: 'text', value: it.title });
+  const due = el('input', { type: 'date', value: it.due || '' });
+  const focus = check(it.focus, () => {}, '今日やる');
+  const move = el('select', {}, el('option', { value: '', textContent: '目標なし（メモ）' }),
+    state.goals.filter(g => !g.done && genreOf(g)).map(g => el('option', { value: g.id, textContent: `${genreOf(g).name} / ${g.title}` })));
+  const saveIt = () => {
+    const t = title.value.trim(); if (!t) { title.focus(); return; }
+    closeSheet();
+    update(() => {
+      it.title = t; it.due = due.value;
+      if (kind === 'inbox') {
+        const to = state.goals.find(g => g.id === move.value);
+        if (to) { state.inbox = state.inbox.filter(x => x !== it); it.focus = true; to.todos.push(it); }
+      } else it.focus = focus.checked;
+    });
+  };
+  title.addEventListener('keydown', ev => { if (ev.key === 'Enter' && !ev.isComposing) saveIt(); });
+  openSheet(kind === 'milestones' ? '細かな目標を編集' : kind === 'inbox' ? 'メモを編集' : 'Todoを編集',
+    field('内容', title), field('期限（なくてもOK）', due),
+    kind === 'inbox' ? field('目標に入れる', move) : el('div', { class: 'switch' }, el('span', {}, '今日やるに入れる'), focus),
+    el('button', { class: 'primary wide', onclick: saveIt }, '保存'),
+    el('button', { class: 'text danger', onclick: () => { closeSheet(); update(() => { const l = list(); l.splice(l.indexOf(it), 1); }, `「${it.title}」を削除しました`); } }, '削除'));
+}
+
+// ---- 設定 ----
+function swatches(list, isSel, onPick) {
+  return el('div', { class: 'swatches' }, list.map((p, i) => el('button', { class: 'sw' + (isSel(p, i) ? ' sel' : ''), title: p[0], ariaLabel: p[0],
+    style: `background:linear-gradient(135deg,${p[1]},${p[2]})`, onclick: () => onPick(p, i) })));
+}
+function renderSettings() {
+  const s = state.settings;
+  const modes = [['auto', '端末に合わせる'], ['light', 'ライト'], ['dark', 'ダーク']];
+  const newName = el('input', { type: 'text', id: 'gName', placeholder: '新しいジャンル名（例: お金、旅行）' });
+  const addGenre = () => {
+    const name = newName.value.trim(); if (!name) return;
+    const p = PALETTE.find(p => !state.genres.some(g => g.color === p[1])) || PALETTE[0];
+    update(() => state.genres.push({ id: uid(), name, color: p[1], color2: p[2] }));
+  };
+  newName.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) addGenre(); });
+  $('vSettings').replaceChildren(
+    el('div', { class: 'panel' }, el('h2', {}, '見た目'),
+      el('h3', {}, 'テーマカラー'),
+      swatches(THEMES, (p, i) => i === s.preset, (p, i) => update(() => s.preset = i)),
+      el('h3', {}, '明るさ'),
+      el('div', { class: 'tabs', style: 'margin:0' }, modes.map(([v, l]) => el('button', { class: 'pill' + (s.theme === v ? ' active' : ''), onclick: () => update(() => s.theme = v) }, l)))),
+    el('div', { class: 'panel' }, el('h2', {}, 'ジャンル'),
+      state.genres.map(g => [
+        el('div', { class: 'grow-row' },
+          el('button', { class: 'sw', title: '色を変える', ariaLabel: `${g.name}の色を変える`, style: `background:linear-gradient(135deg,${g.color},${g.color2})`, onclick: () => { openPal = openPal === g.id ? null : g.id; render(); } }),
+          el('input', { type: 'text', value: g.name, ariaLabel: 'ジャンル名', onchange: e => { const v = e.target.value.trim(); if (v) update(() => g.name = v); else e.target.value = g.name; } }),
+          el('button', { class: 'text danger', onclick: () => { const n = state.goals.filter(x => x.genreId === g.id).length; update(() => { state.genres = state.genres.filter(x => x !== g); state.goals = state.goals.filter(x => x.genreId !== g.id); }, `「${g.name}」${n ? `と目標${n}件` : ''}を削除しました`); } }, '削除')),
+        openPal === g.id ? el('div', { class: 'gpal' }, swatches(PALETTE, p => p[1] === g.color, p => update(() => { g.color = p[1]; g.color2 = p[2]; openPal = null; }))) : null,
+      ]).flat(),
+      el('div', { class: 'grow-row', style: 'margin:12px 0 0' }, newName, el('button', { onclick: addGenre }, '追加'))),
+    el('div', { class: 'panel' }, el('h2', {}, '表示'),
+      el('div', { class: 'switch' }, el('span', {}, '達成済みの目標も表示する'), check(s.showDone, () => update(() => s.showDone = !s.showDone), '達成済みの目標も表示する'))),
+    el('div', { class: 'panel' }, el('h2', {}, 'データ'),
+      el('div', { class: 'meta', style: 'margin-bottom:10px' }, 'データはこの端末のブラウザにだけ保存されます。機種変更や別の端末に移すときは、書き出したファイルを読み込んでください。'),
+      el('div', { class: 'row', style: 'flex-wrap:wrap' }, el('button', { onclick: exportData }, 'ファイルに書き出す'), el('button', { onclick: () => $('importFile').click() }, 'ファイルから読み込む'))));
+}
+function exportData() {
+  const a = el('a', { href: URL.createObjectURL(new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' })), download: `goals-${today()}.json` });
   a.click(); URL.revokeObjectURL(a.href);
-};
-document.getElementById('importBtn').onclick = () => document.getElementById('importFile').click();
-document.getElementById('importFile').onchange = async e => {
+}
+$('importFile').onchange = async e => {
   const f = e.target.files[0]; if (!f) return;
   try {
     const s = JSON.parse(await f.text());
     if (!Array.isArray(s.genres) || !Array.isArray(s.goals)) throw 0;
-    if (confirm('現在のデータを置き換えますか？')) update(() => { state = s; filter = 'all'; });
-  } catch { alert('読み込めないファイルです'); }
+    update(() => { state = normalize(s); filter = 'all'; }, 'データを読み込みました');
+  } catch { toast('読み込めないファイルです'); }
   e.target.value = '';
 };
 
-function renderSwatches() {
-  document.getElementById('swatches').replaceChildren(...PALETTE.map((p, i) => el('button', {
-    type: 'button', class: 'sw' + (i === pick ? ' sel' : ''), title: p.name,
-    style: `background:linear-gradient(120deg,${p.c1},${p.c2})`,
-    onclick: () => { pick = i; renderSwatches(); } })));
+// ---- 全体 ----
+function applyTheme() {
+  const s = state.settings, r = document.documentElement;
+  if (s.theme === 'auto') r.removeAttribute('data-theme'); else r.dataset.theme = s.theme;
+  const p = THEMES[s.preset] || THEMES[0];
+  r.style.setProperty('--sg1', p[1]); r.style.setProperty('--sg2', p[2]);
+  document.querySelector('meta[name=theme-color]').content = p[1];
 }
-renderSwatches();
+function render() {
+  applyTheme();
+  const focus = focusGenre();
+  const v = focus ? 'goals' : view;
+  document.body.classList.toggle('focus', !!focus);
+  document.title = focus ? `${focus.name} | ジャンル別 目標管理` : 'ジャンル別 目標管理';
+  const d = new Date();
+  $('dateLabel').textContent = `${d.getMonth() + 1}月${d.getDate()}日(${'日月火水木金土'[d.getDay()]})`;
+  $('vToday').hidden = v !== 'today'; $('vGoals').hidden = v !== 'goals'; $('vSettings').hidden = v !== 'settings';
+  $('fab').hidden = v !== 'goals';
+  for (const b of $('nav').children) b.classList.toggle('active', b.dataset.view === v);
+  if (v === 'today') renderToday(); else if (v === 'goals') renderGoals(focus); else renderSettings();
+  if (refocus) { document.querySelector(`input[data-key="${refocus}"]`)?.focus(); refocus = null; }
+}
+for (const b of $('nav').children) b.onclick = () => {
+  view = b.dataset.view; try { localStorage.setItem(VIEW_KEY, view); } catch (e) {}
+  render(); window.scrollTo(0, 0);
+};
+$('fab').onclick = () => openGoalSheet(null, focusGenre()?.id);
+// 日付が変わったあとに戻ってきたとき、表示を更新する
+document.addEventListener('visibilitychange', () => { if (!document.hidden && $('sheetBack').hidden && !document.activeElement?.matches('input,select')) render(); });
+
 render();
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
 </script>
 </body>
 </html>
