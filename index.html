@@ -104,8 +104,7 @@
   .goal-main { flex: 1; min-width: 0; }
   .title { font-weight: 900; font-size: 16px; overflow-wrap: anywhere; }
   .pct { font-size: 18px; font-weight: 900; letter-spacing: -.5px; font-variant-numeric: tabular-nums; }
-  .caret { color: var(--muted); font-size: 12px; transition: transform .15s; align-self: center; }
-  .goal.open .caret { transform: rotate(180deg); }
+  .caret { color: var(--muted); font-size: 20px; line-height: 1; align-self: center; }
   .bar { height: 8px; background: color-mix(in srgb, var(--gc) 15%, transparent); border-radius: 8px; margin: 10px 0 2px; overflow: hidden; }
   .bar > i { display: block; height: 100%; background: linear-gradient(90deg, var(--gc), var(--gc2)); border-radius: 8px; }
   .next { font-size: 13px; color: var(--muted); margin-top: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -122,6 +121,25 @@
   .goal-foot { display: flex; justify-content: flex-end; margin-top: 8px; }
   .empty { color: var(--muted); font-size: 13px; display: flex; align-items: center; gap: 10px; padding: 0 4px; }
 
+  /* 詳細 */
+  select.picker { background: var(--card); font-weight: 700; margin-bottom: 12px; }
+  .dtitle { font-size: 22px; font-weight: 900; letter-spacing: -.5px; margin: 4px 4px 10px; overflow-wrap: anywhere; }
+  .actions { display: flex; gap: 8px; margin-bottom: 14px; }
+  .actions button { flex: 1; background: var(--card); }
+  textarea { font: inherit; color: inherit; width: 100%; min-height: 84px; background: var(--field); border: 1px solid transparent; border-radius: 14px; padding: 10px 14px; resize: vertical; display: block; }
+  .panel .section { margin-top: 0; }
+  .week { display: flex; gap: 4px; flex-basis: 100%; }
+  .week i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid color-mix(in srgb, var(--gc) 45%, var(--line)); }
+  .week i.on { background: linear-gradient(135deg, var(--gc), var(--gc2)); border-color: transparent; }
+  .week i.skip { border-style: dotted; opacity: .45; }
+  .rest { width: 24px; height: 24px; flex: none; border-radius: 50%; border: 2px dotted var(--line); }
+  .log { display: flex; gap: 12px; padding: 3px 0; font-size: 13px; }
+  .log time { color: var(--muted); flex: none; width: 44px; font-variant-numeric: tabular-nums; }
+  .log span { min-width: 0; overflow-wrap: anywhere; }
+  .days { display: flex; gap: 6px; flex-wrap: wrap; }
+  .days .pill { padding: 6px 12px; }
+  .goal.link { cursor: pointer; }
+
   /* 設定 */
   .panel { background: var(--card); border-radius: 18px; padding: 16px 18px; margin-bottom: 14px; }
   .panel h2 { font-size: 15px; font-weight: 900; margin: 0 0 12px; }
@@ -137,7 +155,7 @@
 
   /* 下部ナビ・追加ボタン・シート・トースト */
   .nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 15; display: flex; justify-content: center; background: color-mix(in srgb, var(--card) 92%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); }
-  .nav button { flex: 1; max-width: 170px; background: none; border-radius: 0; padding: 8px 0 6px; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 11px; color: var(--muted); }
+  .nav button { flex: 1; max-width: 150px; background: none; border-radius: 0; padding: 8px 0 6px; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 11px; color: var(--muted); }
   .nav button.active { color: color-mix(in srgb, var(--sg1) 80%, var(--text)); }
   .nav svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   .fab { position: fixed; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(76px + env(safe-area-inset-bottom, 0px)); z-index: 10;
@@ -179,6 +197,7 @@
     <div class="quick">
       <input type="text" id="qTitle" placeholder="今日やることを追加" aria-label="今日やることを追加">
       <select id="qGoal" aria-label="どの目標のTodoか"></select>
+      <button class="pill" id="qRep" aria-pressed="false" title="オンにすると、毎日出てくるTodoとして追加します">毎日</button>
       <button class="primary" id="qAdd">追加</button>
     </div>
     <div id="tList"></div>
@@ -188,6 +207,7 @@
     <div class="tabs" id="tabs"></div>
     <div id="list"></div>
   </section>
+  <section id="vDetail" hidden></section>
   <section id="vSettings" hidden></section>
 </main>
 
@@ -196,6 +216,7 @@
 <nav class="nav" id="nav">
   <button data-view="today"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/></svg>今日</button>
   <button data-view="goals"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>目標</button>
+  <button data-view="detail"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="3"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>詳細</button>
   <button data-view="settings"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>設定</button>
 </nav>
 
@@ -208,6 +229,7 @@
 <script>
 const KEY = 'genre-goals-v1';
 const VIEW_KEY = 'genre-goals-view';
+const DETAIL_KEY = 'genre-goals-detail';
 const uid = () => Math.random().toString(36).slice(2, 10);
 const PALETTE = [
   ['青', '#2f6bff', '#00c2ff'], ['紺', '#1f3fb5', '#2f6bff'], ['ティール', '#0b8f9c', '#19c3c3'], ['緑', '#00a870', '#00c2a8'],
@@ -233,7 +255,9 @@ const DEFAULT = {
 // ---- 日付 ----
 const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 const today = () => ymd(new Date());
-const addDays = n => { const d = new Date(); d.setDate(d.getDate() + n); return ymd(d); };
+const dateAt = n => { const d = new Date(); d.setDate(d.getDate() + n); return d; };
+const addDays = n => ymd(dateAt(n));
+const WD = '日月火水木金土';
 function daysLeft(due) {
   const t = new Date(); t.setHours(0, 0, 0, 0);
   return Math.round((new Date(due + 'T00:00:00') - t) / 864e5);
@@ -242,9 +266,9 @@ function daysLeft(due) {
 // ---- 状態 ----
 let state = load();
 let view = 'today';
-try { view = localStorage.getItem(VIEW_KEY) || 'today'; } catch (e) {}
+let detailId = null, prevView = 'goals';
+try { view = localStorage.getItem(VIEW_KEY) || 'today'; detailId = localStorage.getItem(DETAIL_KEY); } catch (e) {}
 let filter = 'all';
-const expanded = new Set();
 let refocus = null;
 let openPal = null;
 
@@ -252,8 +276,9 @@ function normalize(s) {
   const m = { '#4f6bed': 0, '#5b3df5': 0, '#2da44e': 1, '#00a870': 1, '#e8890c': 2, '#f26a00': 2 };
   s.genres.forEach(g => { if (g.color2) return; const d = DEFAULT.genres[m[g.color]]; if (d) { g.color = d.color; g.color2 = d.color2; } else g.color2 = g.color; });
   if (!(s.v >= 2)) { DEFAULT.genres.slice(3).forEach(d => { if (!s.genres.some(g => g.name === d.name)) s.genres.push({ ...d }); }); s.v = 2; }
-  s.goals.forEach(g => { g.milestones = g.milestones || []; g.todos = g.todos || []; });
+  s.goals.forEach(g => { g.milestones = g.milestones || []; g.todos = g.todos || []; g.habits = g.habits || []; });
   s.inbox = s.inbox || [];
+  s.habits = s.habits || [];
   s.settings = Object.assign({ theme: 'auto', preset: 0, showDone: true }, s.settings);
   return s;
 }
@@ -304,7 +329,34 @@ function allItems() {
   return out;
 }
 function setDone(x, v) { x.done = v; if (v) x.doneAt = today(); else delete x.doneAt; }
+// くり返しTodo: {id, title, days: null(毎日) | [曜日], log: [完了した日]}
+function allHabits() {
+  const out = [];
+  for (const goal of state.goals) {
+    const genre = genreOf(goal); if (!genre || goal.done) continue;
+    for (const it of goal.habits) out.push({ it, goal, genre, kind: 'habits' });
+  }
+  for (const it of state.habits) out.push({ it, kind: 'habits' });
+  return out;
+}
+const habitDue = (h, d = new Date()) => !h.days || h.days.includes(d.getDay());
+const habitDone = h => h.log.includes(today());
+const scheduleLabel = h => !h.days || h.days.length === 7 ? '毎日' : h.days.map(d => WD[d]).join('・');
+function habitStreak(h) {
+  let n = 0;
+  for (let i = 0; i < 400; i++) {
+    const d = dateAt(-i);
+    if (!habitDue(h, d)) continue;
+    if (h.log.includes(ymd(d))) n++; else if (i > 0) break;
+  }
+  return n;
+}
+function toggleHabit(h) {
+  update(() => { const T = today(), i = h.log.indexOf(T); if (i >= 0) h.log.splice(i, 1); else { h.log.push(T); if (h.log.length > 400) h.log.shift(); } });
+}
+function listOf(e) { return e.kind === 'inbox' ? state.inbox : e.kind === 'habits' ? (e.goal ? e.goal.habits : state.habits) : e.goal[e.kind]; }
 function toggleItem(e) {
+  if (e.kind === 'habits') return toggleHabit(e.it);
   update(() => setDone(e.it, !e.it.done));
   const g = e.goal;
   if (g && !g.done && e.it.done && [...g.milestones, ...g.todos].every(x => x.done)) {
@@ -315,16 +367,16 @@ function toggleItem(e) {
 
 // ---- 小さな部品 ----
 function tag(text, color) { return el('span', { class: 'tag', style: `--tc:${color}` }, text); }
-function dueTag(due) {
-  if (!due) return null;
+function dueInfo(due) {
   const d = daysLeft(due);
-  if (d < 0) return tag(`${-d}日超過`, 'var(--danger)');
-  if (d === 0) return tag('今日まで', 'var(--warn)');
-  if (d === 1) return tag('明日まで', 'var(--warn)');
-  if (d <= 7) return tag(`あと${d}日`, 'var(--warn)');
+  if (d < 0) return [`${-d}日超過`, 'var(--danger)'];
+  if (d === 0) return ['今日まで', 'var(--warn)'];
+  if (d === 1) return ['明日まで', 'var(--warn)'];
+  if (d <= 7) return [`あと${d}日`, 'var(--warn)'];
   const [, mo, da] = due.split('-');
-  return tag(`${+mo}/${+da}まで`, 'var(--muted)');
+  return [`${+mo}/${+da}まで`, 'var(--muted)'];
 }
+function dueTag(due) { return due ? tag(...dueInfo(due)) : null; }
 function check(checked, fn, title) { return el('input', { type: 'checkbox', checked: !!checked, title, onchange: fn }); }
 function starBtn(e) {
   return el('button', { class: 'star' + (e.it.focus ? ' on' : ''), title: e.it.focus ? '今日やるから外す' : '今日やるに入れる', ariaPressed: String(!!e.it.focus),
@@ -357,12 +409,26 @@ function taskRow(e) {
     kind === 'inbox' || it.done ? null : starBtn(e));
 }
 function sec(title, n, cls) { return el('h2', { class: 'sec' + (cls ? ' ' + cls : '') }, title, n != null ? el('span', { class: 'n' }, n + '件') : null); }
-function gotoGoal(goal) {
-  view = 'goals'; filter = 'all'; expanded.add(goal.id);
-  if (goal.done) state.settings.showDone = true;
-  refocus = goal.id + 'todos';
-  render();
-  $('goal-' + goal.id)?.scrollIntoView({ block: 'center' });
+function habitRow(e) {
+  const { it, goal, genre } = e, d = habitDone(it), n = habitStreak(it);
+  return el('div', { class: 'task' + (d ? ' done' : ''), style: gstyle(genre) },
+    check(d, () => toggleItem(e), '今日の分を完了'),
+    el('button', { class: 'task-main', onclick: () => openItemSheet(e) }, el('div', { class: 't-title' }, it.title),
+      el('div', { class: 'tags' }, tag(scheduleLabel(it), 'var(--muted)'), n >= 2 ? tag(`${n}日連続`, 'var(--warn)') : null, goal ? tag(goal.title, genre.color) : null)));
+}
+function persistView() { try { localStorage.setItem(VIEW_KEY, view); if (detailId) localStorage.setItem(DETAIL_KEY, detailId); } catch (e) {} }
+// 目標の詳細ページを開く。ブラウザの「戻る」で元の画面に戻れるよう、履歴に積む
+function openDetail(id, focusKind) {
+  if (view !== 'detail') prevView = view;
+  view = 'detail'; detailId = id; persistView();
+  if (focusKind) refocus = id + focusKind;
+  if (location.hash !== '#goal-' + id) history.pushState(null, '', '#goal-' + id);
+  render(); window.scrollTo(0, 0);
+}
+function syncRoute() {
+  const m = /^#goal-([a-z0-9]+)$/.exec(location.hash);
+  if (m && state.goals.some(g => g.id === m[1])) { if (view !== 'detail') prevView = view; view = 'detail'; detailId = m[1]; }
+  else if (view === 'detail' && !location.hash) view = prevView;
 }
 function streak(days) {
   let n = 0, i = days.has(today()) ? 0 : -1;
@@ -379,6 +445,8 @@ function renderToday() {
   const doneToday = items.filter(e => e.it.done && e.it.doneAt === T);
   const active = state.goals.filter(g => !g.done && genreOf(g));
   const nearGoals = sortGoals(active.filter(g => g.due && g.due <= W));
+  const habits = allHabits().filter(e => habitDue(e.it));
+  const hDone = habits.filter(e => habitDone(e.it)).length;
 
   // 次の一手: 進行中の各目標から、まだ今日に入っていない最初の未完了項目
   const picked = new Set([...overdue, ...todo, ...soon].map(e => e.it));
@@ -393,10 +461,11 @@ function renderToday() {
   }
 
   const everything = [...allItems().map(e => e.it), ...state.goals];
-  const doneDays = new Set(everything.filter(x => x.done && x.doneAt).map(x => x.doneAt));
-  const weekDone = everything.filter(x => x.done && x.doneAt >= weekAgo).length;
-  const total = doneToday.length + todo.length + overdue.length;
-  $('tSummary').replaceChildren(summaryCard('今日やること', `${doneToday.length} / ${total}`, '完了', total ? doneToday.length / total * 100 : 0,
+  const logs = [...state.goals.flatMap(g => g.habits), ...state.habits].flatMap(h => h.log);
+  const doneDays = new Set([...everything.filter(x => x.done && x.doneAt).map(x => x.doneAt), ...logs]);
+  const weekDone = everything.filter(x => x.done && x.doneAt >= weekAgo).length + logs.filter(d => d >= weekAgo).length;
+  const doneN = doneToday.length + hDone, total = doneToday.length + todo.length + overdue.length + habits.length;
+  $('tSummary').replaceChildren(summaryCard('今日やること', `${doneN} / ${total}`, '完了', total ? doneN / total * 100 : 0,
     [['連続', streak(doneDays) + '日'], ['この7日間', weekDone + '件'], ['進行中の目標', active.length + '件']]));
 
   const q = $('qGoal'), prev = q.value;
@@ -405,20 +474,21 @@ function renderToday() {
   q.value = [...q.options].some(o => o.value === prev) ? prev : '';
 
   const out = [];
-  if (!state.goals.length && !state.inbox.length) {
+  if (!state.goals.length && !state.inbox.length && !state.habits.length) {
     out.push(el('div', { class: 'hint' }, el('b', {}, 'はじめかた'),
       el('ol', {}, el('li', {}, '「目標」タブで、ジャンルごとに目標を作る'), el('li', {}, '目標の中に、細かな目標やTodoを足す'), el('li', {}, '☆を押すと、ここ「今日」に並ぶ')),
       el('button', { class: 'primary', onclick: () => { view = 'goals'; render(); openGoalSheet(); } }, '最初の目標を作る')));
   }
   if (overdue.length) out.push(sec('期限切れ', overdue.length, 'over'), ...overdue.map(taskRow));
   if (todo.length) out.push(sec('今日やる', todo.length), ...todo.map(taskRow));
-  else if (state.goals.length || state.inbox.length) out.push(sec('今日やる'), el('div', { class: 'hint' }, doneToday.length ? '今日の分はすべて完了しました。' : '下の「次の一手」の☆を押すか、上の入力欄から追加してください。'));
+  else if ((state.goals.length || state.inbox.length) && !habits.length) out.push(sec('今日やる'), el('div', { class: 'hint' }, doneToday.length ? '今日の分はすべて完了しました。' : '下の「次の一手」の☆を押すか、上の入力欄から追加してください。'));
+  if (habits.length) out.push(sec('くり返し', habits.length), ...habits.map(habitRow));
   if (next.length) out.push(sec('次の一手', null), ...next.slice(0, 5).map(taskRow));
   if (blank.length) out.push(sec('最初の一歩が決まっていない目標', blank.length),
-    ...blank.slice(0, 3).map(g => el('button', { class: 'linkrow', style: gstyle(genreOf(g)), onclick: () => gotoGoal(g) }, el('span', { class: 'dot' }), el('span', { class: 'grow' }, g.title), el('span', { class: 'arrow' }, 'Todoを決める ›'))));
+    ...blank.slice(0, 3).map(g => el('button', { class: 'linkrow', style: gstyle(genreOf(g)), onclick: () => openDetail(g.id, 'todos') }, el('span', { class: 'dot' }), el('span', { class: 'grow' }, g.title), el('span', { class: 'arrow' }, 'Todoを決める ›'))));
   if (soon.length) out.push(sec('7日以内に期限', soon.length), ...soon.map(taskRow));
   if (nearGoals.length) out.push(sec('期限が近い目標', nearGoals.length),
-    ...nearGoals.map(g => el('button', { class: 'linkrow', style: gstyle(genreOf(g)), onclick: () => gotoGoal(g) }, el('span', { class: 'dot' }), el('span', { class: 'grow' }, g.title), dueTag(g.due), el('span', { class: 'pct' }, progress(g) + '%'))));
+    ...nearGoals.map(g => el('button', { class: 'linkrow', style: gstyle(genreOf(g)), onclick: () => openDetail(g.id) }, el('span', { class: 'dot' }), el('span', { class: 'grow' }, g.title), dueTag(g.due), el('span', { class: 'pct' }, progress(g) + '%'))));
   if (doneToday.length) out.push(sec('今日完了', doneToday.length), ...doneToday.map(taskRow));
   $('tList').replaceChildren(...out);
 }
@@ -426,9 +496,15 @@ function renderToday() {
 function quickAdd() {
   const title = $('qTitle').value.trim(); if (!title) return;
   const goal = state.goals.find(g => g.id === $('qGoal').value);
-  update(() => goal ? goal.todos.push({ id: uid(), title, done: false, focus: true }) : state.inbox.push({ id: uid(), title, done: false }));
+  const daily = $('qRep').classList.contains('active');
+  update(() => {
+    if (daily) (goal ? goal.habits : state.habits).push({ id: uid(), title, days: null, log: [] });
+    else if (goal) goal.todos.push({ id: uid(), title, done: false, focus: true });
+    else state.inbox.push({ id: uid(), title, done: false });
+  });
   $('qTitle').value = ''; $('qTitle').focus();
 }
+$('qRep').onclick = () => { const on = $('qRep').classList.toggle('active'); $('qRep').setAttribute('aria-pressed', on); };
 $('qAdd').onclick = quickAdd;
 $('qTitle').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) quickAdd(); });
 
@@ -443,7 +519,7 @@ function itemList(goal, genre, kind, label, placeholder) {
   };
   input.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) add(); });
   return el('div', { class: 'section' },
-    el('h3', {}, label),
+    label ? el('h3', {}, label) : null,
     goal[kind].map(it => { const e = { it, goal, genre, kind }; return el('div', { class: 'item' + (it.done ? ' done' : '') },
       check(it.done, () => toggleItem(e), '完了'),
       el('button', { class: 'it-text', title: '編集', onclick: () => openItemSheet(e) }, el('span', {}, it.title), it.done ? null : dueTag(it.due)),
@@ -451,23 +527,26 @@ function itemList(goal, genre, kind, label, placeholder) {
     el('div', { class: 'row add' }, input, el('button', { onclick: add }, '追加')));
 }
 
-function goalCard(goal, genre, forceOpen) {
-  const pct = progress(goal), open = forceOpen || expanded.has(goal.id);
+// open=true は拡大ページ用（その場で編集できる）。通常はタップで詳細ページを開く
+function goalCard(goal, genre, open) {
+  const pct = progress(goal);
   const all = [...goal.todos, ...goal.milestones];
   const nextIt = all.find(x => !x.done);
-  const tags = [goal.done ? tag('達成', 'var(--ok)') : dueTag(goal.due), all.length ? tag(`${all.filter(x => x.done).length}/${all.length} 完了`, genre.color) : null];
-  const head = el('div', { class: 'goal-head', onclick: e => { if (forceOpen || e.target.closest('input,button,a')) return; expanded.has(goal.id) ? expanded.delete(goal.id) : expanded.add(goal.id); render(); } },
-    check(goal.done, () => update(() => setDone(goal, !goal.done)), '目標を達成'),
-    el('div', { class: 'goal-main' }, el('div', { class: 'title' }, goal.title), el('div', { class: 'tags' }, tags)),
-    el('span', { class: 'pct' }, pct + '%'),
-    forceOpen ? null : el('span', { class: 'caret' }, '▼'));
-  return el('div', { class: 'goal' + (goal.done ? ' done' : '') + (open ? ' open' : ''), id: 'goal-' + goal.id, style: gstyle(genre) },
-    head,
+  const tags = [goal.done ? tag('達成', 'var(--ok)') : dueTag(goal.due), all.length ? tag(`${all.filter(x => x.done).length}/${all.length} 完了`, genre.color) : null,
+    goal.habits.length ? tag(`くり返し ${goal.habits.length}`, 'var(--muted)') : null];
+  const go = e => { if (!open && !e.target.closest('input,button,a')) openDetail(goal.id); };
+  return el('div', { class: 'goal' + (goal.done ? ' done' : '') + (open ? '' : ' link'), id: 'goal-' + goal.id, style: gstyle(genre), onclick: go,
+      tabIndex: open ? -1 : 0, onkeydown: e => { if (e.key === 'Enter' && e.target === e.currentTarget) go(e); } },
+    el('div', { class: 'goal-head' },
+      check(goal.done, () => update(() => setDone(goal, !goal.done)), '目標を達成'),
+      el('div', { class: 'goal-main' }, el('div', { class: 'title' }, goal.title), el('div', { class: 'tags' }, tags)),
+      el('span', { class: 'pct' }, pct + '%'),
+      open ? null : el('span', { class: 'caret' }, '›')),
     el('div', { class: 'bar' }, el('i', { style: `width:${pct}%` })),
     open ? [
       itemList(goal, genre, 'milestones', '細かな目標', '細かな目標を追加（例: 単語帳1冊終える）'),
       itemList(goal, genre, 'todos', 'Todo', 'Todoを追加'),
-      el('div', { class: 'goal-foot' }, el('button', { class: 'text', onclick: () => openGoalSheet(goal) }, '目標を編集')),
+      el('div', { class: 'goal-foot' }, el('a', { class: 'chip', href: '#goal-' + goal.id }, '詳細を開く ›')),
     ] : (goal.done ? null : el('div', { class: 'next' }, nextIt ? [el('b', {}, '次'), nextIt.title] : (all.length ? 'すべて完了。達成にチェックできます' : 'タップしてTodoを追加'))));
 }
 
@@ -475,7 +554,9 @@ function focusGenre() {
   const m = /^#genre-([a-z0-9]+)$/.exec(location.hash);
   return m ? state.genres.find(g => g.id === m[1]) : undefined;
 }
-window.addEventListener('hashchange', () => render());
+const onRoute = () => { syncRoute(); closeSheet(); render(); };
+window.addEventListener('hashchange', onRoute);
+window.addEventListener('popstate', onRoute);
 function stat(label, value) { return el('div', { class: 'stat' }, el('b', {}, value), el('span', {}, label)); }
 
 function renderGoals(focus) {
@@ -519,6 +600,63 @@ function renderGoals(focus) {
   }));
 }
 
+// ---- 詳細 ----
+function weekDots(h) {
+  return el('div', { class: 'week', title: '直近7日間' }, [6, 5, 4, 3, 2, 1, 0].map(i => { const d = dateAt(-i);
+    return el('i', { class: h.log.includes(ymd(d)) ? 'on' : habitDue(h, d) ? '' : 'skip', title: `${d.getMonth() + 1}/${d.getDate()}(${WD[d.getDay()]})` }); }));
+}
+function habitItem(e) {
+  const { it } = e, d = habitDone(it), n = habitStreak(it);
+  return el('div', { class: 'item' + (d ? ' done' : '') },
+    habitDue(it) ? check(d, () => toggleItem(e), '今日の分を完了') : el('span', { class: 'rest', title: '今日はお休み' }),
+    el('button', { class: 'it-text', title: '編集', onclick: () => openItemSheet(e) }, el('span', {}, it.title),
+      tag(scheduleLabel(it), 'var(--muted)'), n >= 2 ? tag(`${n}日連続`, 'var(--warn)') : null, weekDots(it)));
+}
+function goalLink(g) {
+  return el('button', { class: 'linkrow', style: gstyle(genreOf(g)), onclick: () => openDetail(g.id) }, el('span', { class: 'dot' }), el('span', { class: 'grow' }, g.title),
+    g.done ? tag('達成', 'var(--ok)') : dueTag(g.due), el('span', { class: 'pct' }, progress(g) + '%'));
+}
+function renderDetail() {
+  const goals = state.goals.filter(genreOf);
+  const goal = goals.find(g => g.id === detailId);
+  if (!goal) {
+    $('vDetail').replaceChildren(...(goals.length
+      ? [el('div', { class: 'hint' }, '詳細を見る目標を選んでください。'), sec('目標', goals.length), ...sortGoals(goals).map(goalLink)]
+      : [el('div', { class: 'hint' }, 'まだ目標がありません。', el('div', { style: 'margin-top:10px' }, el('button', { class: 'primary', onclick: () => openGoalSheet() }, '最初の目標を作る')))]));
+    return;
+  }
+  const genre = genreOf(goal), pct = progress(goal);
+  const cnt = a => `${a.filter(i => i.done).length}/${a.length}`;
+  const dueH = goal.habits.filter(h => habitDue(h));
+  const picker = el('select', { class: 'picker', ariaLabel: '目標を切り替える', onchange: e => openDetail(e.target.value) },
+    state.genres.map(g => { const gs = sortGoals(goals.filter(x => x.genreId === g.id)); return gs.length ? el('optgroup', { label: g.name }, gs.map(x => el('option', { value: x.id, textContent: (x.done ? '✓ ' : '') + x.title }))) : null; }));
+  picker.value = goal.id;
+  const note = el('textarea', { value: goal.note || '', placeholder: 'なぜやるのか、決めたこと、参考リンクなど', ariaLabel: 'メモ', oninput: e => { goal.note = e.target.value; save(); } });
+  const hKey = goal.id + 'habits';
+  const hInput = el('input', { type: 'text', placeholder: '毎日やることを追加（例: 単語を10個）', ariaLabel: '毎日やることを追加' });
+  hInput.dataset.key = hKey;
+  const addHabit = () => { const t = hInput.value.trim(); if (t) { refocus = hKey; update(() => goal.habits.push({ id: uid(), title: t, days: null, log: [] })); } };
+  hInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) addHabit(); });
+  const logs = [...[...goal.milestones, ...goal.todos].filter(x => x.done && x.doneAt).map(x => [x.doneAt, x.title]), ...goal.habits.flatMap(h => h.log.map(d => [d, h.title]))]
+    .sort((a, b) => a[0] < b[0] ? 1 : a[0] > b[0] ? -1 : 0).slice(0, 12);
+  $('vDetail').replaceChildren(el('div', { style: gstyle(genre) },
+    picker,
+    el('h2', { class: 'dtitle' }, goal.title),
+    summaryCard(`${genre.name}・${goal.done ? '達成' : goal.due ? dueInfo(goal.due)[0] : '期限なし'}`, pct + '%', null, pct,
+      [['細かな目標', cnt(goal.milestones)], ['Todo', cnt(goal.todos)], ['今日のくり返し', `${dueH.filter(habitDone).length}/${dueH.length}`]], gstyle(genre)),
+    el('div', { class: 'actions' },
+      el('button', { onclick: () => update(() => setDone(goal, !goal.done)) }, goal.done ? '未達成に戻す' : '達成にする'),
+      el('button', { onclick: () => openGoalSheet(goal) }, '名前・期限を編集')),
+    el('div', { class: 'panel' }, el('h2', {}, 'Todo'), itemList(goal, genre, 'todos', null, 'Todoを追加')),
+    el('div', { class: 'panel' }, el('h2', {}, 'くり返し'),
+      goal.habits.length ? null : el('div', { class: 'meta', style: 'margin-bottom:8px' }, 'チェックしても次の日にまた出てくるTodoです。追加後にタップすると、曜日を選べます。'),
+      goal.habits.map(it => habitItem({ it, goal, genre, kind: 'habits' })),
+      el('div', { class: 'row add' }, hInput, el('button', { onclick: addHabit }, '追加'))),
+    el('div', { class: 'panel' }, el('h2', {}, '細かな目標'), itemList(goal, genre, 'milestones', null, '細かな目標を追加（例: 単語帳1冊終える）')),
+    el('div', { class: 'panel' }, el('h2', {}, 'メモ'), note),
+    logs.length ? el('div', { class: 'panel' }, el('h2', {}, '記録'), logs.map(([d, t]) => { const [, mo, da] = d.split('-'); return el('div', { class: 'log' }, el('time', {}, `${+mo}/${+da}`), el('span', {}, t)); })) : null));
+}
+
 // ---- シート ----
 function openSheet(title, ...body) {
   $('sheet').replaceChildren(el('div', { class: 'grab' }), el('h3', {}, title), el('div', { class: 'stack' }, body));
@@ -539,7 +677,7 @@ function openGoalSheet(goal, genreId) {
     const t = title.value.trim(); if (!t || !sel.value) { title.focus(); return; }
     closeSheet();
     if (goal) update(() => { goal.title = t; goal.genreId = sel.value; goal.due = due.value; });
-    else { const id = uid(); expanded.add(id); refocus = id + 'todos'; update(() => state.goals.push({ id, genreId: sel.value, title: t, due: due.value, done: false, milestones: [], todos: [] })); }
+    else { const id = uid(); update(() => state.goals.push({ id, genreId: sel.value, title: t, due: due.value, done: false, milestones: [], todos: [], habits: [] })); if (!focusGenre()) openDetail(id, 'todos'); }
   };
   title.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) saveIt(); });
   openSheet(goal ? '目標を編集' : '目標を追加',
@@ -551,29 +689,55 @@ function openGoalSheet(goal, genreId) {
 
 function openItemSheet(e) {
   const { it, goal, kind } = e;
-  const list = () => kind === 'inbox' ? state.inbox : goal[kind];
+  let rep = kind === 'habits' ? (it.days ? 'days' : 'daily') : 'none';
+  const days = new Set(it.days || [new Date().getDay()]);
   const title = el('input', { type: 'text', value: it.title });
   const due = el('input', { type: 'date', value: it.due || '' });
   const focus = check(it.focus, () => {}, '今日やる');
-  const move = el('select', {}, el('option', { value: '', textContent: '目標なし（メモ）' }),
+  const move = el('select', {}, el('option', { value: '', textContent: '目標なし' }),
     state.goals.filter(g => !g.done && genreOf(g)).map(g => el('option', { value: g.id, textContent: `${genreOf(g).name} / ${g.title}` })));
+  const dueField = field('期限（なくてもOK）', due);
+  const focusRow = el('div', { class: 'switch' }, el('span', {}, '今日やるに入れる'), focus);
+  const repBox = el('div', { class: 'stack' });
+  const drawRep = () => {
+    repBox.replaceChildren(
+      el('div', { class: 'days' }, [['none', 'しない'], ['daily', '毎日'], ['days', '曜日を選ぶ']].map(([v, l]) => el('button', { class: 'pill' + (rep === v ? ' active' : ''), onclick: () => { rep = v; drawRep(); } }, l))),
+      rep === 'days' ? el('div', { class: 'days' }, [...WD].map((c, i) => el('button', { class: 'pill' + (days.has(i) ? ' active' : ''), ariaPressed: String(days.has(i)), onclick: () => { days.has(i) ? days.delete(i) : days.add(i); drawRep(); } }, c))) : null);
+    dueField.hidden = rep !== 'none';
+    focusRow.hidden = rep !== 'none' || !goal;
+  };
+  drawRep();
   const saveIt = () => {
     const t = title.value.trim(); if (!t) { title.focus(); return; }
+    if (rep === 'days' && !days.size) { toast('曜日を1つ以上選んでください'); return; }
     closeSheet();
     update(() => {
-      it.title = t; it.due = due.value;
-      if (kind === 'inbox') {
-        const to = state.goals.find(g => g.id === move.value);
-        if (to) { state.inbox = state.inbox.filter(x => x !== it); it.focus = true; to.todos.push(it); }
-      } else it.focus = focus.checked;
+      const src = listOf(e), toGoal = goal || state.goals.find(g => g.id === move.value);
+      it.title = t;
+      if (kind === 'milestones') { it.due = due.value; it.focus = focus.checked; return; }
+      if (rep !== 'none') { it.days = rep === 'days' ? [...days].sort() : null; it.log = it.log || []; delete it.done; delete it.doneAt; delete it.due; delete it.focus; }
+      else {
+        if (kind === 'habits') { delete it.days; delete it.log; it.done = false; }
+        it.due = due.value;
+        if (goal) it.focus = focus.checked; else if (toGoal) it.focus = true;
+      }
+      const dest = rep !== 'none' ? (toGoal ? toGoal.habits : state.habits) : (toGoal ? toGoal.todos : state.inbox);
+      if (dest !== src) { src.splice(src.indexOf(it), 1); dest.push(it); }
     });
   };
+  const shift = d => { const l = listOf(e), i = l.indexOf(it), j = i + d; if (j < 0 || j >= l.length) return; update(() => { l.splice(i, 1); l.splice(j, 0, it); }); toast(d < 0 ? '1つ上に移動しました' : '1つ下に移動しました'); };
   title.addEventListener('keydown', ev => { if (ev.key === 'Enter' && !ev.isComposing) saveIt(); });
-  openSheet(kind === 'milestones' ? '細かな目標を編集' : kind === 'inbox' ? 'メモを編集' : 'Todoを編集',
-    field('内容', title), field('期限（なくてもOK）', due),
-    kind === 'inbox' ? field('目標に入れる', move) : el('div', { class: 'switch' }, el('span', {}, '今日やるに入れる'), focus),
+  openSheet(kind === 'milestones' ? '細かな目標を編集' : kind === 'habits' ? 'くり返しTodoを編集' : kind === 'inbox' ? 'メモを編集' : 'Todoを編集',
+    field('内容', title),
+    kind === 'milestones' ? null : el('label', {}, 'くり返し', repBox),
+    dueField, focusRow,
+    goal ? null : field('目標に入れる', move),
     el('button', { class: 'primary wide', onclick: saveIt }, '保存'),
-    el('button', { class: 'text danger', onclick: () => { closeSheet(); update(() => { const l = list(); l.splice(l.indexOf(it), 1); }, `「${it.title}」を削除しました`); } }, '削除'));
+    el('div', { class: 'row' },
+      goal ? el('button', { class: 'text', onclick: () => shift(-1) }, '↑ 上へ') : null,
+      goal ? el('button', { class: 'text', onclick: () => shift(1) }, '↓ 下へ') : null,
+      el('span', { style: 'flex:1' }),
+      el('button', { class: 'text danger', onclick: () => { closeSheet(); update(() => { const l = listOf(e); l.splice(l.indexOf(it), 1); }, `「${it.title}」を削除しました`); } }, '削除')));
 }
 
 // ---- 設定 ----
@@ -642,20 +806,22 @@ function render() {
   document.title = focus ? `${focus.name} | ジャンル別 目標管理` : 'ジャンル別 目標管理';
   const d = new Date();
   $('dateLabel').textContent = `${d.getMonth() + 1}月${d.getDate()}日(${'日月火水木金土'[d.getDay()]})`;
-  $('vToday').hidden = v !== 'today'; $('vGoals').hidden = v !== 'goals'; $('vSettings').hidden = v !== 'settings';
+  $('vToday').hidden = v !== 'today'; $('vGoals').hidden = v !== 'goals'; $('vDetail').hidden = v !== 'detail'; $('vSettings').hidden = v !== 'settings';
   $('fab').hidden = v !== 'goals';
   for (const b of $('nav').children) b.classList.toggle('active', b.dataset.view === v);
-  if (v === 'today') renderToday(); else if (v === 'goals') renderGoals(focus); else renderSettings();
+  if (v === 'today') renderToday(); else if (v === 'goals') renderGoals(focus); else if (v === 'detail') renderDetail(); else renderSettings();
   if (refocus) { document.querySelector(`input[data-key="${refocus}"]`)?.focus(); refocus = null; }
 }
 for (const b of $('nav').children) b.onclick = () => {
-  view = b.dataset.view; try { localStorage.setItem(VIEW_KEY, view); } catch (e) {}
+  view = b.dataset.view; persistView();
+  if (location.hash) history.replaceState(null, '', location.pathname + location.search);
   render(); window.scrollTo(0, 0);
 };
 $('fab').onclick = () => openGoalSheet(null, focusGenre()?.id);
 // 日付が変わったあとに戻ってきたとき、表示を更新する
 document.addEventListener('visibilitychange', () => { if (!document.hidden && $('sheetBack').hidden && !document.activeElement?.matches('input,select')) render(); });
 
+syncRoute();
 render();
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
 </script>
