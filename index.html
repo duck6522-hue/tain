@@ -183,6 +183,31 @@
   .focus .genre-head .chip { color: #fff; background: rgba(255,255,255,.22); }
   .focus .goals { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 0 14px; align-items: start; }
   .focus .fab { bottom: max(16px, env(safe-area-inset-bottom, 0px)); }
+  /* 写真の背景（ジャンルの大きいページ） */
+  #bg { position: fixed; inset: 0; z-index: -1; background: center/cover no-repeat; }
+  #bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(rgba(0,0,0,.35), rgba(0,0,0,.62)); }
+  body.photo { --bg: #111; --card: rgba(18,20,26,.55); --field: rgba(255,255,255,.14); --text: #fff; --muted: rgba(255,255,255,.8); --line: rgba(255,255,255,.22); --danger: #ff8a93; --warn: #ffc27a; --ok: #6be8b0; color-scheme: dark; }
+  body.photo .goal, body.photo .stat, body.photo .gactions button, body.photo .empty .chip { backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+  body.photo h1, body.photo .stat b { background: none; color: #fff; -webkit-text-fill-color: #fff; }
+  body.photo.focus .genre-head { background: none; box-shadow: none; padding: 9vh 4px 18px; }
+  body.photo.focus .genre-head h2 { font-size: 46px; text-shadow: 0 2px 14px rgba(0,0,0,.55); }
+  .gactions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .gactions button { background: var(--card); font-size: 13px; }
+
+  /* メモリー（達成した目標） */
+  .mems { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  .mem { aspect-ratio: 3 / 4; border-radius: 18px; padding: 14px; color: #fff; text-align: left; font-weight: 400; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; overflow: hidden;
+    background: linear-gradient(135deg, var(--gc), var(--gc2)); background-size: cover; background-position: center; }
+  .mem b { font-size: 16px; font-weight: 900; line-height: 1.3; overflow-wrap: anywhere; text-shadow: 0 1px 6px rgba(0,0,0,.45); }
+  .mem span { font-size: 12px; opacity: .92; text-shadow: 0 1px 6px rgba(0,0,0,.45); }
+
+  /* 画像のプレビュー */
+  .poster-back { position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,.88); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+    padding: calc(16px + env(safe-area-inset-top, 0px)) 20px calc(16px + env(safe-area-inset-bottom, 0px)); text-align: center; }
+  .poster-back img { max-height: 66vh; max-width: 100%; border-radius: 22px; box-shadow: 0 10px 40px rgba(0,0,0,.5); }
+  .poster-back p { margin: 0; font-size: 13px; color: rgba(255,255,255,.8); max-width: 420px; }
+  .poster-back button { background: #fff; color: #111; padding: 12px 22px; border-radius: 999px; }
+  .poster-back button.sub { background: rgba(255,255,255,.18); color: #fff; }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
@@ -225,6 +250,9 @@
 </div>
 <div class="toast" id="toast" hidden></div>
 <input id="importFile" type="file" accept="application/json" hidden>
+<input id="photoFile" type="file" accept="image/*" hidden>
+<div id="bg" hidden></div>
+<div class="poster-back" id="poster" hidden></div>
 
 <script>
 const KEY = 'genre-goals-v1';
@@ -361,7 +389,7 @@ function toggleItem(e) {
   const g = e.goal;
   if (g && !g.done && e.it.done && [...g.milestones, ...g.todos].every(x => x.done)) {
     const id = g.id;
-    toast(`「${g.title}」の項目がすべて完了しました`, '目標を達成にする', () => update(() => { const t = state.goals.find(x => x.id === id); if (t) setDone(t, true); }));
+    toast(`「${g.title}」の項目がすべて完了しました`, '目標を達成にする', () => { const t = state.goals.find(x => x.id === id); if (t) achieve(t, true); });
   }
 }
 
@@ -395,6 +423,134 @@ function toast(msg, label, fn) {
   t.replaceChildren(el('span', {}, msg), label ? el('button', { onclick: () => { t.hidden = true; fn(); } }, label) : null);
   t.hidden = false;
   toast.timer = setTimeout(() => { t.hidden = true; }, 6000);
+}
+
+// ---- 写真（この端末の IndexedDB に保存。書き出しファイルには含めない） ----
+const photos = {};   // 'genre:<id>' / 'goal:<id>' -> 表示用の URL
+function idb() {
+  return new Promise((res, rej) => { const r = indexedDB.open('genre-goals', 1); r.onupgradeneeded = () => r.result.createObjectStore('photos'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+}
+async function photosLoad() {
+  try {
+    const db = await idb();
+    await new Promise(res => { const c = db.transaction('photos').objectStore('photos').openCursor();
+      c.onsuccess = () => { const cur = c.result; if (cur) { photos[cur.key] = URL.createObjectURL(cur.value); cur.continue(); } else res(); }; c.onerror = res; });
+  } catch (e) {}
+}
+async function photoSet(key, blob) {
+  if (photos[key]) URL.revokeObjectURL(photos[key]);
+  if (blob) photos[key] = URL.createObjectURL(blob); else delete photos[key];
+  render();
+  try { const st = (await idb()).transaction('photos', 'readwrite').objectStore('photos'); if (blob) st.put(blob, key); else st.delete(key); }
+  catch (e) { toast('写真をこの端末に保存できませんでした'); }
+}
+const loadImg = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
+let photoKey = null;
+function pickPhoto(key) { photoKey = key; $('photoFile').click(); }
+$('photoFile').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  const url = URL.createObjectURL(f);
+  try {
+    // 保存容量を抑えるため、長辺 1600px に縮める
+    const img = await loadImg(url), k = Math.min(1, 1600 / Math.max(img.naturalWidth, img.naturalHeight));
+    const c = el('canvas', { width: Math.round(img.naturalWidth * k), height: Math.round(img.naturalHeight * k) });
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    c.toBlob(b => b ? photoSet(photoKey, b) : toast('この画像は読み込めませんでした'), 'image/jpeg', .85);
+  } catch (err) { toast('この画像は読み込めませんでした'); }
+  URL.revokeObjectURL(url);
+};
+
+// ---- 待ち受け・記念カードの画像 ----
+function fmtDate(d) { if (!d) return ''; const [y, m, da] = d.split('-'); return `${y}.${+m}.${+da}`; }
+// goal なし: ジャンルの待ち受け / 進行中の目標: 目標の待ち受け / 達成済み: 記念カード
+async function makePoster(genre, goal) {
+  const W = 1170, H = 2532, P = 96, IW = W - 2 * P;
+  const c = el('canvas', { width: W, height: H }), x = c.getContext('2d');
+  const src = (goal && photos['goal:' + goal.id]) || photos['genre:' + genre.id];
+  const goals = sortGoals(state.goals.filter(g => g.genreId === genre.id && !g.done));
+  const texts = [genre.name, ...(goal ? [goal] : goals).flatMap(g => [g.title, ...g.todos.map(i => i.title), ...g.milestones.map(i => i.title)])].join('')
+    + '達成進行中の目標はありません件平均次ほかまで細かなくり返しかかった日数回Todo0123456789%./・…○';
+  try { await Promise.all([700, 900].map(w => document.fonts.load(`${w} 40px "Noto Sans JP"`, texts))); } catch (e) {}
+  if (src) {
+    const img = await loadImg(src), k = Math.max(W / img.naturalWidth, H / img.naturalHeight), w = img.naturalWidth * k, h = img.naturalHeight * k;
+    x.drawImage(img, (W - w) / 2, (H - h) / 2, w, h);
+  }
+  const g = x.createLinearGradient(0, 0, src ? 0 : W, H);
+  if (src) { g.addColorStop(0, 'rgba(0,0,0,.28)'); g.addColorStop(.35, 'rgba(0,0,0,.3)'); g.addColorStop(1, 'rgba(0,0,0,.74)'); }
+  else { g.addColorStop(0, genre.color); g.addColorStop(1, genre.color2); }
+  x.fillStyle = g; x.fillRect(0, 0, W, H);
+  if (src) { x.shadowColor = 'rgba(0,0,0,.45)'; x.shadowBlur = 16; }
+  const font = (w, s) => { x.font = `${w} ${s}px "Noto Sans JP", sans-serif`; };
+  const ink = a => { x.fillStyle = `rgba(255,255,255,${a})`; };
+  const fit = (s, max) => { if (x.measureText(s).width <= max) return s; while (s.length > 1 && x.measureText(s + '…').width > max) s = s.slice(0, -1); return s + '…'; };
+  const wrap = (s, max, n) => {
+    const out = [''];
+    for (const ch of s) { if (out[out.length - 1] && x.measureText(out[out.length - 1] + ch).width > max) out.push(''); out[out.length - 1] += ch; }
+    if (out.length > n) { const rest = out.slice(n - 1).join(''); out.length = n; out[n - 1] = fit(rest, max); }
+    return out;
+  };
+  const rr = (X, Y, w, h, r) => { x.beginPath(); if (x.roundRect) x.roundRect(X, Y, w, h, r); else x.rect(X, Y, w, h); x.fill(); };
+  const bar = (y, pct) => { ink(.28); rr(P, y, IW, 18, 9); if (pct > 0) { ink(1); rr(P, y, Math.max(18, IW * pct / 100), 18, 9); } };
+  // 待ち受けの時計と重ならないよう、上 1/3 は空けておく
+  let y = H * .36;
+  if (!goal) {
+    font(900, 150); ink(1); x.fillText(fit(genre.name, IW), P, y); y += 84;
+    const avg = goals.length ? Math.round(goals.map(progress).reduce((a, b) => a + b, 0) / goals.length) : 0;
+    font(700, 46); ink(.88); x.fillText(goals.length ? `進行中 ${goals.length}件・平均 ${avg}%` : '進行中の目標はありません', P, y); y += 150;
+    for (const gl of goals.slice(0, 4)) {
+      const pct = progress(gl), nx = [...gl.todos, ...gl.milestones].find(i => !i.done);
+      font(900, 58); ink(1); const pw = x.measureText(pct + '%').width; x.fillText(pct + '%', W - P - pw, y);
+      font(700, 58); x.fillText(fit(gl.title, IW - pw - 40), P, y);
+      bar(y + 34, pct);
+      if (nx) { font(700, 38); ink(.8); x.fillText(fit('次  ' + nx.title, IW), P, y + 110); }
+      y += nx ? 206 : 150;
+    }
+    if (goals.length > 4) { font(700, 40); ink(.8); x.fillText(`ほか ${goals.length - 4}件`, P, y - 20); }
+  } else if (!goal.done) {
+    const [, mo, da] = (goal.due || '--').split('-');
+    font(700, 46); ink(.88); x.fillText(fit(genre.name + (goal.due ? `・${+mo}/${+da}まで` : ''), IW), P, y); y += 130;
+    font(900, 108); ink(1); for (const l of wrap(goal.title, IW, 2)) { x.fillText(l, P, y); y += 134; }
+    const pct = progress(goal); y += 30; font(900, 120); x.fillText(pct + '%', P, y); bar(y + 44, pct); y += 180;
+    font(700, 50);
+    for (const it of [...goal.todos, ...goal.milestones].filter(i => !i.done).slice(0, 5)) { ink(.6); x.fillText('○', P, y); ink(.95); x.fillText(fit(it.title, IW - 80), P + 80, y); y += 88; }
+  } else {
+    font(900, 60); const tw = x.measureText('達成').width; ink(1); rr(P, y - 78, tw + 80, 108, 54);
+    x.save(); x.shadowColor = 'transparent'; x.fillStyle = genre.color; x.fillText('達成', P + 40, y); x.restore(); y += 190;
+    font(900, 112); ink(1); for (const l of wrap(goal.title, IW, 3)) { x.fillText(l, P, y); y += 140; }
+    y -= 40; font(700, 48); ink(.88); x.fillText(fit(`${genre.name}・${fmtDate(goal.doneAt)}`, IW), P, y); y += 90;
+    const nT = goal.todos.filter(i => i.done).length, nM = goal.milestones.filter(i => i.done).length, nH = goal.habits.reduce((a, h) => a + h.log.length, 0);
+    const days = goal.created && goal.doneAt ? Math.round((new Date(goal.doneAt) - new Date(goal.created)) / 864e5) + 1 : 0;
+    const tiles = [['Todo', nT && nT + '件'], ['細かな目標', nM && nM + '件'], ['くり返し', nH && nH + '回'], ['かかった日数', days && days + '日']].filter(v => v[1]);
+    const tw2 = (IW - 30) / 2;
+    tiles.forEach(([l, v], i) => {
+      const X = P + (i % 2) * (tw2 + 30), Y = y + Math.floor(i / 2) * 220;
+      x.save(); x.shadowColor = 'transparent'; ink(.18); rr(X, Y, tw2, 190, 32); x.restore();
+      font(700, 36); ink(.85); x.fillText(l, X + 36, Y + 66); font(900, 72); ink(1); x.fillText(v, X + 36, Y + 150);
+    });
+  }
+  return c;
+}
+let closePoster = () => {};
+async function showPoster({ goalId, genreId }) {
+  const goal = state.goals.find(g => g.id === goalId), genre = goal ? genreOf(goal) : state.genres.find(g => g.id === genreId);
+  if (!genre) return;
+  let c; try { c = await makePoster(genre, goal); } catch (e) { toast('画像を作れませんでした'); return; }
+  c.toBlob(blob => {
+    const url = URL.createObjectURL(blob), name = `${(goal ? goal.title : genre.name).replace(/[\\/:*?"<>|\s]+/g, '_')}-${today()}.png`;
+    const file = new File([blob], name, { type: 'image/png' });
+    const saveIt = () => { if (navigator.canShare && navigator.canShare({ files: [file] })) navigator.share({ files: [file] }).catch(() => {}); else el('a', { href: url, download: name }).click(); };
+    closePoster = () => { $('poster').hidden = true; URL.revokeObjectURL(url); closePoster = () => {}; };
+    $('poster').replaceChildren(
+      el('img', { src: url, alt: goal ? goal.title : genre.name }),
+      el('p', {}, goal && goal.done ? '画像を長押しすると、写真に保存できます。' : '画像を長押しすると、写真に保存できます。時計と重ならないよう、上を空けてあります。'),
+      el('div', { class: 'row' }, el('button', { onclick: saveIt }, '保存・共有'), el('button', { class: 'sub', onclick: () => closePoster() }, '閉じる')));
+    $('poster').hidden = false;
+  }, 'image/png');
+}
+function achieve(goal, v) {
+  const id = goal.id;
+  update(() => setDone(goal, v));
+  if (v) toast(`「${goal.title}」達成おめでとうございます`, '記念カードを作る', () => showPoster({ goalId: id }));
 }
 
 // ---- 今日 ----
@@ -538,7 +694,7 @@ function goalCard(goal, genre, open) {
   return el('div', { class: 'goal' + (goal.done ? ' done' : '') + (open ? '' : ' link'), id: 'goal-' + goal.id, style: gstyle(genre), onclick: go,
       tabIndex: open ? -1 : 0, onkeydown: e => { if (e.key === 'Enter' && e.target === e.currentTarget) go(e); } },
     el('div', { class: 'goal-head' },
-      check(goal.done, () => update(() => setDone(goal, !goal.done)), '目標を達成'),
+      check(goal.done, () => achieve(goal, !goal.done), '目標を達成'),
       el('div', { class: 'goal-main' }, el('div', { class: 'title' }, goal.title), el('div', { class: 'tags' }, tags)),
       el('span', { class: 'pct' }, pct + '%'),
       open ? null : el('span', { class: 'caret' }, '›')),
@@ -554,13 +710,14 @@ function focusGenre() {
   const m = /^#genre-([a-z0-9]+)$/.exec(location.hash);
   return m ? state.genres.find(g => g.id === m[1]) : undefined;
 }
-const onRoute = () => { syncRoute(); closeSheet(); render(); };
+const onRoute = () => { syncRoute(); closeSheet(); closePoster(); render(); };
 window.addEventListener('hashchange', onRoute);
 window.addEventListener('popstate', onRoute);
 function stat(label, value) { return el('div', { class: 'stat' }, el('b', {}, value), el('span', {}, label)); }
 
 function renderGoals(focus) {
-  const cur = focus ? focus.id : (state.genres.some(g => g.id === filter) ? filter : 'all');
+  const doneGoals = state.goals.filter(g => g.done && genreOf(g)).sort((a, b) => (a.doneAt || '') < (b.doneAt || '') ? 1 : -1);
+  const cur = focus ? focus.id : (state.genres.some(g => g.id === filter) || (filter === 'done' && doneGoals.length) ? filter : 'all');
   const showDone = state.settings.showDone;
   const sg = cur === 'all' ? null : state.genres.find(g => g.id === cur);
   const sGoals = state.goals.filter(x => genreOf(x) && (cur === 'all' || x.genreId === cur));
@@ -570,9 +727,24 @@ function renderGoals(focus) {
   $('gSummary').replaceChildren(summaryCard(sg ? `${sg.name}の進捗` : '全体の進捗', sAvg + '%', null, sAvg,
     [['目標', cnt(sGoals)], ['細かな目標', cnt(sGoals.flatMap(x => x.milestones))], ['Todo', cnt(sGoals.flatMap(x => x.todos))]], gstyle(sg)));
 
-  $('tabs').replaceChildren(
+  $('tabs').replaceChildren(...[
     el('button', { class: 'pill' + (cur === 'all' ? ' active' : ''), onclick: () => { filter = 'all'; render(); } }, 'すべて'),
-    ...state.genres.map(g => el('button', { class: 'pill' + (cur === g.id ? ' active' : ''), style: gstyle(g), onclick: () => { filter = g.id; render(); } }, el('span', { class: 'dot' }), g.name)));
+    ...state.genres.map(g => el('button', { class: 'pill' + (cur === g.id ? ' active' : ''), style: gstyle(g), onclick: () => { filter = g.id; render(); } }, el('span', { class: 'dot' }), g.name)),
+    doneGoals.length ? el('button', { class: 'pill' + (cur === 'done' ? ' active' : ''), onclick: () => { filter = 'done'; render(); } }, `メモリー ${doneGoals.length}`) : null,
+  ].filter(Boolean));
+
+  // メモリー: 達成した目標のアルバム
+  if (cur === 'done') {
+    const T = today(), n = k => doneGoals.filter(g => (g.doneAt || '').slice(0, k) === T.slice(0, k)).length;
+    $('gSummary').replaceChildren(summaryCard('達成した目標', doneGoals.length + '件', null, 100,
+      [['今月', n(7) + '件'], ['今年', n(4) + '件'], ['ジャンル', new Set(doneGoals.map(g => g.genreId)).size + '種']]));
+    $('list').replaceChildren(el('div', { class: 'mems' }, doneGoals.map(goal => {
+      const genre = genreOf(goal), ph = photos['goal:' + goal.id] || photos['genre:' + genre.id];
+      return el('button', { class: 'mem', style: gstyle(genre) + (ph ? `;background-image:linear-gradient(transparent 30%,rgba(0,0,0,.72)),url(${ph})` : ''), onclick: () => openDetail(goal.id) },
+        el('span', {}, `${genre.name}・${fmtDate(goal.doneAt)}`), el('b', {}, goal.title));
+    })));
+    return;
+  }
 
   const shown = state.genres.filter(g => cur === 'all' || g.id === cur);
   if (!shown.length) { $('list').replaceChildren(el('div', { class: 'hint' }, 'ジャンルがありません。「設定」から追加してください。')); return; }
@@ -582,11 +754,15 @@ function renderGoals(focus) {
     const avg = avgOf(goals);
     return el('section', { class: 'genre', style: gstyle(g) },
       el('div', { class: 'genre-head' },
-        el('span', { class: 'gicon' }),
+        el('span', { class: 'gicon', style: photos['genre:' + g.id] ? `background-image:url(${photos['genre:' + g.id]});background-size:cover;background-position:center` : '' }),
         el('h2', {}, g.name),
         el('span', { class: 'meta' }, goals.length ? `${goals.length}件 / 平均 ${avg}%` : ''),
         focus ? el('a', { class: 'chip', href: '#' }, '← 一覧へ')
-              : el('a', { class: 'chip', href: location.href.split('#')[0] + '#genre-' + g.id, target: '_blank', rel: 'noopener', title: 'このジャンルを別タブで大きく開く' }, '拡大 ↗')),
+              : el('a', { class: 'chip', href: '#genre-' + g.id, title: 'このジャンルを大きく開く' }, '大きく ›')),
+      focus ? el('div', { class: 'gactions' },
+        el('button', { onclick: () => showPoster({ genreId: g.id }) }, '待ち受け画像を作る'),
+        el('button', { onclick: () => pickPhoto('genre:' + g.id) }, photos['genre:' + g.id] ? '背景の写真を変える' : '背景に写真を選ぶ'),
+        photos['genre:' + g.id] ? el('button', { onclick: () => photoSet('genre:' + g.id, null) }, '写真を外す') : null) : null,
       focus ? el('div', { class: 'stats' },
         stat('目標 達成', cnt(goals).replace('/', ' / ')),
         stat('細かな目標', cnt(goals.flatMap(x => x.milestones)).replace('/', ' / ')),
@@ -628,6 +804,7 @@ function renderDetail() {
   const genre = genreOf(goal), pct = progress(goal);
   const cnt = a => `${a.filter(i => i.done).length}/${a.length}`;
   const dueH = goal.habits.filter(h => habitDue(h));
+  const gph = photos['goal:' + goal.id];
   const picker = el('select', { class: 'picker', ariaLabel: '目標を切り替える', onchange: e => openDetail(e.target.value) },
     state.genres.map(g => { const gs = sortGoals(goals.filter(x => x.genreId === g.id)); return gs.length ? el('optgroup', { label: g.name }, gs.map(x => el('option', { value: x.id, textContent: (x.done ? '✓ ' : '') + x.title }))) : null; }));
   picker.value = goal.id;
@@ -643,10 +820,15 @@ function renderDetail() {
     picker,
     el('h2', { class: 'dtitle' }, goal.title),
     summaryCard(`${genre.name}・${goal.done ? '達成' : goal.due ? dueInfo(goal.due)[0] : '期限なし'}`, pct + '%', null, pct,
-      [['細かな目標', cnt(goal.milestones)], ['Todo', cnt(goal.todos)], ['今日のくり返し', `${dueH.filter(habitDone).length}/${dueH.length}`]], gstyle(genre)),
+      [['細かな目標', cnt(goal.milestones)], ['Todo', cnt(goal.todos)], ['今日のくり返し', `${dueH.filter(habitDone).length}/${dueH.length}`]],
+      gstyle(genre) + (gph ? `;background:linear-gradient(rgba(0,0,0,.2),rgba(0,0,0,.6)),url(${gph}) center/cover` : '')),
     el('div', { class: 'actions' },
-      el('button', { onclick: () => update(() => setDone(goal, !goal.done)) }, goal.done ? '未達成に戻す' : '達成にする'),
+      el('button', { onclick: () => achieve(goal, !goal.done) }, goal.done ? '未達成に戻す' : '達成にする'),
       el('button', { onclick: () => openGoalSheet(goal) }, '名前・期限を編集')),
+    el('div', { class: 'gactions' },
+      el('button', { onclick: () => showPoster({ goalId: goal.id }) }, goal.done ? '記念カードを作る' : '待ち受け画像を作る'),
+      el('button', { onclick: () => pickPhoto('goal:' + goal.id) }, gph ? '写真を変える' : '写真を選ぶ'),
+      gph ? el('button', { onclick: () => photoSet('goal:' + goal.id, null) }, '写真を外す') : null),
     el('div', { class: 'panel' }, el('h2', {}, 'Todo'), itemList(goal, genre, 'todos', null, 'Todoを追加')),
     el('div', { class: 'panel' }, el('h2', {}, 'くり返し'),
       goal.habits.length ? null : el('div', { class: 'meta', style: 'margin-bottom:8px' }, 'チェックしても次の日にまた出てくるTodoです。追加後にタップすると、曜日を選べます。'),
@@ -665,7 +847,7 @@ function openSheet(title, ...body) {
 }
 function closeSheet() { $('sheetBack').hidden = true; }
 $('sheetBack').addEventListener('click', e => { if (e.target === $('sheetBack')) closeSheet(); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeSheet(); closePoster(); } });
 const field = (label, input) => el('label', {}, label, input);
 
 function openGoalSheet(goal, genreId) {
@@ -677,7 +859,7 @@ function openGoalSheet(goal, genreId) {
     const t = title.value.trim(); if (!t || !sel.value) { title.focus(); return; }
     closeSheet();
     if (goal) update(() => { goal.title = t; goal.genreId = sel.value; goal.due = due.value; });
-    else { const id = uid(); update(() => state.goals.push({ id, genreId: sel.value, title: t, due: due.value, done: false, milestones: [], todos: [], habits: [] })); if (!focusGenre()) openDetail(id, 'todos'); }
+    else { const id = uid(); update(() => state.goals.push({ id, genreId: sel.value, title: t, due: due.value, done: false, created: today(), milestones: [], todos: [], habits: [] })); if (!focusGenre()) openDetail(id, 'todos'); }
   };
   title.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) saveIt(); });
   openSheet(goal ? '目標を編集' : '目標を追加',
@@ -773,7 +955,7 @@ function renderSettings() {
     el('div', { class: 'panel' }, el('h2', {}, '表示'),
       el('div', { class: 'switch' }, el('span', {}, '達成済みの目標も表示する'), check(s.showDone, () => update(() => s.showDone = !s.showDone), '達成済みの目標も表示する'))),
     el('div', { class: 'panel' }, el('h2', {}, 'データ'),
-      el('div', { class: 'meta', style: 'margin-bottom:10px' }, 'データはこの端末のブラウザにだけ保存されます。機種変更や別の端末に移すときは、書き出したファイルを読み込んでください。'),
+      el('div', { class: 'meta', style: 'margin-bottom:10px' }, 'データはこの端末のブラウザにだけ保存されます。機種変更や別の端末に移すときは、書き出したファイルを読み込んでください。写真は書き出しファイルに含まれません。'),
       el('div', { class: 'row', style: 'flex-wrap:wrap' }, el('button', { onclick: exportData }, 'ファイルに書き出す'), el('button', { onclick: () => $('importFile').click() }, 'ファイルから読み込む'))));
 }
 function exportData() {
@@ -803,6 +985,10 @@ function render() {
   const focus = focusGenre();
   const v = focus ? 'goals' : view;
   document.body.classList.toggle('focus', !!focus);
+  const bgPhoto = focus && photos['genre:' + focus.id];
+  document.body.classList.toggle('photo', !!bgPhoto);
+  $('bg').hidden = !bgPhoto;
+  $('bg').style.backgroundImage = bgPhoto ? `url(${bgPhoto})` : '';
   document.title = focus ? `${focus.name} | ジャンル別 目標管理` : 'ジャンル別 目標管理';
   const d = new Date();
   $('dateLabel').textContent = `${d.getMonth() + 1}月${d.getDate()}日(${'日月火水木金土'[d.getDay()]})`;
@@ -823,6 +1009,7 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden && $(
 
 syncRoute();
 render();
+photosLoad().then(() => { if (Object.keys(photos).length) render(); });
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
 </script>
 </body>
